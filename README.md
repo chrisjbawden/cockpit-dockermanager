@@ -6,7 +6,7 @@
 ---
 
 <div align="center">
-  <img src="https://github.com/chrisjbawden/cockpit-dockermanager/blob/main/misc/interface.png" alt="DockerManager Interface" style="width:70%; margin:auto;"/>
+  <img src="misc/interface.png" alt="DockerManager Interface" style="width:70%; margin:auto;"/>
 </div>
 
 ---
