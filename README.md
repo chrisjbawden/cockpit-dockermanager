@@ -19,11 +19,16 @@
 
 ## 🛠️ Installation
 
-Ubuntu:
+### Ubuntu:
 
 ```shell
 curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb
 ```
+### Fedora/RHEL:
+
+```shell
+curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash
+
 
 ---
 
