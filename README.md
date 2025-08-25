@@ -28,7 +28,7 @@ curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanag
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash
-
+```
 
 ---
 
