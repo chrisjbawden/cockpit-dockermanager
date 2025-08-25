@@ -4,7 +4,7 @@
       <meta charset="utf-8">
       <meta name="description" content="">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>syslog-multiplier - a simple way to send syslog data to multiple locations</title>
+      <title>Docker Manager</title>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
       <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800,900" rel="stylesheet">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/railscasts.min.css">
@@ -17,13 +17,13 @@
       <div class="logo"></div>
       <ul class="menu">
         <div class="menu__item toggle"><span></span></div>
-        <li class="menu__item"><a href="doc.html" class="link link--dark"><i class="fa fa-book"></i> Documentation</a></li>
-        <li class="menu__item"><a href="https://github.com/chrisjbawden/log-to-syslog/tree/main" target="blank" class="link link--dark"><i class="fa fa-github"></i> Github</a></li>
+        <li class="menu__item"><a href="doc.html" class="link link--dark"><i class="fa fa-book"></i>Documentation</a></li>
+        <li class="menu__item"><a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="blank" class="link link--dark"><i class="fa fa-github"></i>Github</a></li>
       </ul>
     </nav>
     <div class="hero">
-      <h1 class="hero__title">Log-to-Syslog</h1>
-      <p class="hero__description">A simple way to send logs to syslog</p>
+      <h1 class="hero__title">Docker Manager</h1>
+      <p class="hero__description">A lite container manager for cockpit</p>
     </div>
     <div class="hero__terminal">
       <pre>
@@ -31,39 +31,104 @@
         <code class="shell-session demo">cli ~ $ </code>
       </pre>
     </div>
-    <div class="wrapper">
-      <div class="installation">
-        <h3 class="section__title center">Installation</h3>
-        <div class="tab__container">
-          <ul class="tab__menu">
-            <!-- <li class="tab active" data-tab="mac">mac</li> -->
-            <li class="tab active" data-tab="linux">linux</li>
-            <!--<li class="tab" data-tab="win">win</li> -->
-          </ul>
-          <pre class="nohighlight code">
-            <!-- <code class="tab__pane active mac">$  brew install scribbler</code> -->
-            <code class="tab__pane active linux">$  curl -sl https://raw.githubusercontent.com/chrisjbawden/log-to-syslog/refs/heads/main/scripts/simple-deploy.sh -o simple-deploy.sh && bash simple-deploy.sh</code>
-            <!-- <code class="tab__pane win">$  gem install scribbler</code> -->
-          </pre>
-        </div>
-      </div>
+<!--
+<div class="wrapper">
+  <div class="installation">
+    <h3 class="section__title center">Installation</h3>
+    <div class="tab__container">
+      <ul class="tab__menu">
+        <!-- <li class="tab active" data-tab="mac">mac</li> -->
+       <!--- <li class="tab active" data-tab="linux">Ubuntu</li> 
+        <!--<li class="tab" data-tab="win">win</li> -->
+     <!-- </ul>
+      <pre class="nohighlight code">
+        <!-- <code class="tab__pane active mac">$  brew install scribbler</code> -->
+       <!-- <code class="tab__pane active linux">$  curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb</code>
+        <!-- <code class="tab__pane win">$  gem install scribbler</code> -->
+     <!-- </pre>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- Lightbox Gallery -->
+<div class="gallery">
+  <img src="interface-main.png" alt="Screenshot 1" onclick="openLightbox(this)">
+  <img src="interface-term.png" alt="Screenshot 2" onclick="openLightbox(this)">
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <span class="close">&times;</span>
+  <img class="lightbox-content" id="lightbox-img">
+</div>
+
+<style>
+  .gallery {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .gallery img {
+    width: 150px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.3s;
+  }
+  .gallery img:hover {
+    transform: scale(1.05);
+  }
+
+  .lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 60px;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.9);
+  }
+  .lightbox-content {
+    display: block;
+    margin: auto;
+    max-width: 90%;
+    max-height: 80vh;
+  }
+  .close {
+    position: absolute;
+    top: 20px; right: 35px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  function openLightbox(img) {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+    lightbox.style.display = "block";
+    lightboxImg.src = img.src.replace("_thumb", ""); // assumes large image has no "_thumb"
+  }
+  function closeLightbox() {
+    document.getElementById("lightbox").style.display = "none";
+  }
+</script>
+
+    
       <div class="feature">
         <div class="feature__item">
-          <h3 class="section__title center">Fast</h3>
-          <p>Start exporting logs from your systems or solutions in as quickly as it takes you to run a script. Its purpose is to facilitate rapid development.</p>
+          <h3 class="section__title center">Simple</h3>
+          <p>The focus is the basics - with visibility being key.</p>
         </div>
         <div class="feature__item">
-          <h3 class="section__title center">Caching</h3>
-          <p>Utilising logstashs built in mechanism for caching and delivery failure detections and resending, you automatically adopt benefitial controls.</p>
+          <h3 class="section__title center">Terminal</h3>
+          <p>Terminal is within reach for more complex activities.</p>
         </div>
-        <div class="feature__item">
-          <h3 class="section__title center">Micro</h3>
-          <p>Plumb this up with your other systems to build something bigger or fill a gap. It also means you can deploy as many of these as your project needs.</p>
-        </div>
-        <div class="feature__item">
-          <h3 class="section__title center">Contained</h3>
-          <p>Easy tidy up and managment with containerisation - I mean what isnt containeriesed these days?</p>
-        </div>
+
         <!--
         <div class="feature__item">
           <h3 class="section__title center">Highlightings</h3>
@@ -118,20 +183,31 @@
         -->
         <div class="changelog__item">
           <div class="changelog__meta center">
-            <h4 class="changelog__title">v0.6</h4>
-            <small class="changelog__date">2024</small>
+            <h4 class="changelog__title">v1.0.3</h4>
+            <small class="changelog__date">2025</small>
           </div>
           <div class="changelog__detail">
             <ul>
-              <li>Utilising of environment variable.</li>
-              <li>Defaults for some of the user input.</li>
+              <li>In window terminal functionality.</li>
+              <li></li>
             </ul>
           </div>
         </div>
         <div class="changelog__item">
           <div class="changelog__meta center">
-            <h4 class="changelog__title">v0.3</h4>
-            <small class="changelog__date">2024</small>
+            <h4 class="changelog__title">v1.0.2</h4>
+            <small class="changelog__date">2025</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>Bug fixes.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="changelog__item">
+          <div class="changelog__meta center">
+            <h4 class="changelog__title">v1.0.1</h4>
+            <small class="changelog__date">2025</small>
           </div>
           <div class="changelog__detail">
             <ul>
