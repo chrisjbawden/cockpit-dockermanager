@@ -139,6 +139,7 @@ nav {
 
 .changelog__meta {
   text-align: right;
+  flex-basis: 50%;
 }
 
 .changelog__meta small {
