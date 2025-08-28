@@ -53,6 +53,7 @@ nav {
 .feature__item {
   max-width: calc(50% - 20px);
   margin: 0 20px 0 0;
+  min-width: 40%;
 }
 
 .feature__item .section__title {
