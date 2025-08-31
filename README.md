@@ -34,6 +34,13 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 ### Changelog
 
+#### v1.0.5
+
+- Added "sort-by" functionality
+- Added search functionality
+- Fixed terminal button
+- Modified refresh interval to 3mins
+
 #### v1.0.4
 
 - Added Real time log, CPU/memory monitoring
