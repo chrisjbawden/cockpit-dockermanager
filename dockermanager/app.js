@@ -554,7 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setInterval(() => {
           if (Date.now() < pauseRefreshUntil) return; // skip while typing
           reloadContainers();
-        }, 180 * 1000);
+        }, 60 * 1000);
       })
       .catch(() => {
         showError(`ERROR: Unable to access Docker!<br>
