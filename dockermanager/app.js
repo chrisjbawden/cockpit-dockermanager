@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
   const containerList = document.getElementById("container-list");
   const refreshButton = document.getElementById("refresh-button");
+  const sortSelect = document.getElementById("sort-select");
+  const searchControl = document.getElementById("search-control");
+  const searchToggle = document.getElementById("search-toggle");
+  const searchInput = document.getElementById("search-input");
   const actionBanner = document.getElementById("action-banner");
   const loadingOverlay = document.getElementById("loading-overlay");
 
@@ -8,6 +12,116 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let containerStats = {};
   let logStreams = {};
+  let currentSort = (typeof localStorage !== 'undefined' && localStorage.getItem('sortBy')) || 'name';
+  let currentSearch = (typeof localStorage !== 'undefined' && localStorage.getItem('searchQuery')) || '';
+  let pauseRefreshUntil = 0; // pause auto-refresh while typing
+
+  // Track and restore focus around refresh to prevent input from disengaging
+  let rememberedFocus = null;
+  function rememberFocus() {
+    try {
+      if (document.activeElement === searchInput) {
+        rememberedFocus = {
+          isSearch: true,
+          pos: typeof searchInput.selectionStart === 'number'
+            ? searchInput.selectionStart
+            : (searchInput.value || '').length
+        };
+      } else {
+        rememberedFocus = null;
+      }
+    } catch (_) { rememberedFocus = null; }
+  }
+
+  function restoreRememberedFocus() {
+    try {
+      if (rememberedFocus?.isSearch && searchControl?.classList.contains('open')) {
+        const pos = Math.max(0, Math.min((searchInput.value || '').length, rememberedFocus.pos || 0));
+        searchInput.focus({ preventScroll: true });
+        try { searchInput.setSelectionRange(pos, pos); } catch(_){}
+      }
+    } finally {
+      rememberedFocus = null;
+    }
+  }
+
+  if (sortSelect) {
+    try {
+      const nameOpt = Array.from(sortSelect.options || []).find(o => o.value === 'name');
+      if (nameOpt) nameOpt.textContent = 'Name (A-Z)';
+    } catch (_) {}
+    try { sortSelect.value = currentSort; } catch (_) {}
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      try { localStorage.setItem('sortBy', currentSort); } catch (_) {}
+      rememberFocus();
+      loadContainers(() => {
+        restoreRememberedFocus();
+      });
+    });
+  }
+
+  // Initialize search UI
+  if (searchControl && searchToggle && searchInput) {
+    // Restore saved query; open when there is a query
+    if ((currentSearch || '').length > 0) {
+      searchInput.value = currentSearch;
+      searchControl.classList.add('open');
+      setTimeout(applyFilterToDOM, 0);
+    }
+
+    // Toggle open/close when clicking the magnifier
+    searchToggle.addEventListener('click', () => {
+      const isOpen = searchControl.classList.toggle('open');
+      if (isOpen) {
+        requestAnimationFrame(() => { searchInput.focus(); searchInput.select(); });
+      } else {
+        // Clear query when hiding
+        searchInput.value = '';
+        currentSearch = '';
+        try { localStorage.setItem('searchQuery', ''); } catch(_){}
+        applyFilterToDOM();
+      }
+    });
+
+    let searchDebounce;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        currentSearch = (searchInput.value || '').trim().toLowerCase();
+        try { localStorage.setItem('searchQuery', searchInput.value || ''); } catch(_){}
+        applyFilterToDOM();
+        // Briefly pause auto-refresh while typing
+        pauseRefreshUntil = Date.now() + 1500;
+        // In case anything steals focus, restore it
+        const el = searchInput;
+        setTimeout(() => {
+          if (searchControl.classList.contains('open') && document.activeElement !== el) {
+            const pos = el.value.length;
+            el.focus({ preventScroll: true });
+            try { el.setSelectionRange(pos, pos); } catch(_){}
+          }
+        }, 0);
+      }, 1000); // 250ms debounce; adjust as needed
+    });
+
+    // Prevent global handlers from hijacking keystrokes
+    ['keydown','keypress','keyup'].forEach(evt => {
+      searchInput.addEventListener(evt, e => {
+        e.stopPropagation();
+      });
+    });
+
+    // Esc clears query but keeps input open
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        currentSearch = '';
+        try { localStorage.setItem('searchQuery', ''); } catch(_){}
+        applyFilterToDOM();
+      }
+    });
+  }
 
   function showBanner(message) {
     if (!actionBanner) return;
@@ -31,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function runDockerCommand(container, action) {
     showBanner(`${action.charAt(0).toUpperCase() + action.slice(1)}ing ${container}...`);
     cockpit.spawn(["docker", action, container], { err: "message" })
-      .then(() => loadContainers())
+      .then(() => reloadContainers())
       .catch(() => showBanner(`❌ Failed to ${action} ${container}`));
   }
 
@@ -51,6 +165,62 @@ document.addEventListener("DOMContentLoaded", () => {
       seen.add(hostPort);
       return `<a href="http://${hostname}:${hostPort}" target="_blank">${hostPort}</a>`;
     }).filter(Boolean).join(" ");
+  }
+
+  function parseUptimeSeconds(statusRaw) {
+    if (!statusRaw) return -1;
+    const s = statusRaw.toLowerCase();
+    if (!s.startsWith('up')) return -1; // treat only running containers as having uptime
+
+    const units = {
+      second: 1,
+      minute: 60,
+      hour: 3600,
+      day: 86400,
+      week: 604800,
+      month: 2628000,   // approx
+      year: 31536000
+    };
+
+    const m = s.match(/(\d+)\s*(second|minute|hour|day|week|month|year)/);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      const unit = m[2];
+      return (Number.isFinite(n) ? n : 0) * (units[unit] || 1);
+    }
+
+    if (s.includes('about an hour') || s.includes('an hour')) return 3600;
+    if (s.includes('a minute')) return 60;
+    if (s.includes('a day')) return 86400;
+    if (s.includes('a week')) return 604800;
+    return 0;
+  }
+
+  function sortLines(lines) {
+    try {
+      const rows = lines
+        .filter(l => !!l)
+        .map(l => {
+          const [name, statusRaw = "", portsRaw = ""] = l.split("\t");
+          return {
+            name,
+            statusRaw,
+            portsRaw,
+            uptimeSeconds: parseUptimeSeconds(statusRaw),
+            raw: l
+          };
+        });
+
+      if ((currentSort || 'name') === 'name') {
+        rows.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (currentSort === 'uptime') {
+        rows.sort((a, b) => (b.uptimeSeconds - a.uptimeSeconds));
+      }
+
+      return rows.map(r => r.raw);
+    } catch (_) {
+      return lines;
+    }
   }
 
   function loadContainerStats() {
@@ -239,6 +409,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.showLogs = showLogs;
 
+  function roundMemUsage(memUsage) {
+    if (!memUsage) return 'N/A';
+    // Matches "13.4MiB", "782.5KiB", "123MB", etc.
+    const match = /^([\d.]+)\s*([A-Za-z]+)/.exec(memUsage);
+    if (!match) return memUsage;
+    const num = parseFloat(match[1]);
+    const unit = match[2].toUpperCase();
+
+    let mb;
+    switch (unit) {
+      case 'B':
+        mb = num / 1000000;
+        break;
+      case 'KB':
+        mb = num / 1000;
+        break;
+      case 'KIB':
+        mb = num * 1024 / 1000000;
+        break;
+      case 'MB':
+        mb = num;
+        break;
+      case 'MIB':
+        mb = num * 1048576 / 1000000;
+        break;
+      case 'GB':
+        mb = num * 1000;
+        break;
+      case 'GIB':
+        mb = num * 1073741824 / 1000000;
+        break;
+      default:
+        mb = num;
+    }
+    return `${Math.round(mb)} MB`;
+  }
+
   function loadContainers(onDone) {
     containerList.innerHTML = `<div class="loading">Loading containers...</div>`;
 
@@ -254,21 +461,28 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        const cards = lines.map(line => {
+        const sortedLines = sortLines(lines);
+
+        const cards = sortedLines.map(line => {
           const [name, statusRaw = "", portsRaw = ""] = line.split("\t");
           const isRunning = statusRaw.toLowerCase().startsWith("up");
           const portsHTML = parsePorts(portsRaw);
           const stats = containerStats[name] || {};
 
+          const roundStatPercent = v =>
+            (typeof v === "string" && v.endsWith("%"))
+              ? (Math.round(parseFloat(v)) + "%")
+              : v;
+
           const statsHTML = isRunning && stats.cpu ? `
             <div class="container-stats">
               <div class="stat-item">
                 <span class="stat-label">CPU:</span>
-                <span class="stat-value">${stats.cpu}</span>
+                <span class="stat-value">${roundStatPercent(stats.cpu)}</span>
               </div>
               <div class="stat-item">
                 <span class="stat-label">Memory:</span>
-                <span class="stat-value">${stats.memUsage || 'N/A'}</span>
+                <span class="stat-value">${roundMemUsage(stats.memUsage)} (${roundStatPercent(stats.memPerc) || 'N/A'})</span>
               </div>
             </div>
           ` : '';
@@ -293,6 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         containerList.innerHTML = cards.join("");
+        applyFilterToDOM();
       })
       .catch(() => {
         showError(`ERROR: Unable to access Docker!<br>
@@ -306,6 +521,27 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  // Preserve focus across reloads
+  function reloadContainers(done) {
+    rememberFocus();
+    loadContainers(() => {
+      restoreRememberedFocus();
+      done?.();
+    });
+  }
+
+  function applyFilterToDOM() {
+    const q = (currentSearch || '').toLowerCase();
+    const cards = containerList.querySelectorAll('.container-card');
+    if (!cards || cards.length === 0) return;
+    cards.forEach(card => {
+      const nameEl = card.querySelector('.container-name');
+      const name = (nameEl?.textContent || '').toLowerCase();
+      const show = !q || name.includes(q);
+      card.style.display = show ? '' : 'none';
+    });
+  }
+
   function checkDockerAvailable() {
     return cockpit.spawn(["docker", "info"], { err: "message" });
   }
@@ -313,9 +549,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function initApp() {
     checkDockerAvailable()
       .then(() => {
-        loadContainers();
+        reloadContainers();
 
-        setInterval(() => loadContainers(), 30 * 1000);
+        setInterval(() => {
+          if (Date.now() < pauseRefreshUntil) return; // skip while typing
+          reloadContainers();
+        }, 300 * 1000);
       })
       .catch(() => {
         showError(`ERROR: Unable to access Docker!<br>
@@ -335,7 +574,9 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshButton.style.opacity = 0.6;
     refreshButton.style.cursor = "not-allowed";
 
+    rememberFocus();
     loadContainers(() => {
+      restoreRememberedFocus();
       refreshButton.disabled = false;
       refreshButton.textContent = "Refresh";
       refreshButton.style.opacity = 1;
@@ -358,13 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
     docEl.style.setProperty('--terminal-panel-height', h + 'px');
   }
 
-  let dragMoved = false;
-
-  btn.addEventListener('click', (e) => {
-    if (dragMoved) {
-      dragMoved = false;
-      return;
-    }
+  btn.addEventListener('click', () => {
     panel.classList.toggle('open');
     document.body.classList.toggle('with-terminal-padding',
                                     panel.classList.contains('open'));
@@ -395,81 +630,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  let btnDragging = false, offsetX = 0, offsetY = 0;
-
-  function clamp(val, min, max) {
-    return Math.max(min, Math.min(max, val));
-  }
-
-  btn.addEventListener('mousedown', function(e) {
-    if (e.button !== 0) return;
-    btnDragging = true;
-    dragMoved = false;
-    btn.style.cursor = 'grabbing';
-    btn.style.left = btn.getBoundingClientRect().left + "px";
-    btn.style.top = btn.getBoundingClientRect().top + "px";
-    btn.style.right = "";
-    btn.style.bottom = "";
-    btn.style.position = "fixed";
-    offsetX = e.clientX - btn.getBoundingClientRect().left;
-    offsetY = e.clientY - btn.getBoundingClientY().top;
-    e.preventDefault();
-    e.stopPropagation();
-  });
-
-  document.addEventListener('mousemove', function(e) {
-    if (!btnDragging) return;
-    dragMoved = true;
-    const btnW = btn.offsetWidth, btnH = btn.offsetHeight;
-    const x = clamp(e.clientX - offsetX, 0, window.innerWidth - btnW);
-    const y = clamp(e.clientY - offsetY, 0, window.innerHeight - btnH);
-    btn.style.left = x + "px";
-    btn.style.top = y + "px";
-    btn.style.right = "";
-    btn.style.bottom = "";
-    btn.style.position = "fixed";
-  });
-
-  document.addEventListener('mouseup', function() {
-    if (btnDragging) {
-      btnDragging = false;
-      btn.style.cursor = 'grab';
-      setTimeout(() => { dragMoved = false; }, 100);
-    }
-  });
-
-  btn.addEventListener('touchstart', function(e) {
-    btnDragging = true;
-    dragMoved = false;
-    btn.style.cursor = 'grabbing';
-    btn.style.left = btn.getBoundingClientRect().left + "px";
-    btn.style.top = btn.getBoundingClientRect().top + "px";
-    btn.style.right = "";
-    btn.style.bottom = "";
-    btn.style.position = "fixed";
-    offsetX = e.touches[0].clientX - btn.getBoundingClientRect().left;
-    offsetY = e.touches[0].clientY - btn.getBoundingClientRect().top;
-    e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('touchmove', function(e) {
-    if (!btnDragging) return;
-    dragMoved = true;
-    const btnW = btn.offsetWidth, btnH = btn.offsetHeight;
-    const x = clamp(e.touches[0].clientX - offsetX, 0, window.innerWidth - btnW);
-    const y = clamp(e.touches[0].clientY - offsetY, 0, window.innerHeight - btnH);
-    btn.style.left = x + "px";
-    btn.style.top = y + "px";
-    btn.style.right = "";
-    btn.style.bottom = "";
-    btn.style.position = "fixed";
-  }, { passive: false });
-
-  document.addEventListener('touchend', function() {
-    if (btnDragging) {
-      btnDragging = false;
-      btn.style.cursor = 'grab';
-      setTimeout(() => { dragMoved = false; }, 100);
-    }
-  });
 })();
