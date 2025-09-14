@@ -15,8 +15,8 @@ jobs:
 
       - name: Generate Packages and Packages.gz
         run: |
-          cd docs/dists/stable/main/binary-all
-          dpkg-scanpackages . /dev/null | tee Packages | gzip -9 > Packages.gz
+          cd docs
+          dpkg-scanpackages dists/stable/main/binary-all /dev/null | tee dists/stable/main/binary-all/Packages | gzip -9 > dists/stable/main/binary-all/Packages.gz
 
       - name: Commit and push changes
         run: |
