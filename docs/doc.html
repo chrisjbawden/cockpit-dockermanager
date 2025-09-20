@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="Documentation for Cockpit Docker Manager, a lite Docker management plugin for Cockpit.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cockpit Docker Manager Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800,900" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/doc.css">
+    <link rel="author" href="humans.txt">
+  </head>
+  <body>
+    <div class="doc__bg"></div>
+    <nav class="header">
+      <h1 class="logo">Cockpit Docker Manager <span class="logo__thin">Docs</span></h1>
+      <ul class="menu">
+        <div class="menu__item toggle"><span></span></div>
+        <li class="menu__item"><a href="index.html" class="link link--dark"><i class="fa fa-home"></i> Home</a></li>
+        <li class="menu__item"><a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="_blank" class="link link--dark"><i class="fa fa-github"></i> Github</a></li>
+      </ul>
+    </nav>
+    <div class="wrapper">
+      <aside class="doc__nav">
+        <ul>
+          <li class="js-btn selected">Get Started</li>
+          <li class="js-btn">Installation</li>
+          <li class="js-btn">Configuration</li>
+          <li class="js-btn">Features</li>
+          <li class="js-btn">FAQ</li>
+          <li class="js-btn">Issues & Support</li>
+          <li class="js-btn">Contributing</li>
+          <li class="js-btn">Links</li>
+        </ul>
+      </aside>
+      <article class="doc__content">
+
+        <!-- Get Started -->
+        <section class="js-section">
+          <h3 class="section__title">Get Started</h3>
+          <p>
+            Cockpit Docker Manager is a simple, no-fuss Docker management UI for <a href="https://cockpit-project.org/" target="_blank">Cockpit</a>.<br>
+          </p>
+          <ul>
+            <li>Works on most Linux distros where Cockpit does (see <a href="https://cockpit-project.org/running.html" target="_blank">official Cockpit resource</a>).</li>
+            <li>Docker must be installed and running on the host.</li>
+            <li>User must be a member of the <code>docker</code> group for full access.</li>
+          </ul>
+        </section>
+
+        <!-- Installation -->
+        <section class="js-section">
+          <h3 class="section__title">Installation</h3>
+          <div style="padding-left: 20px;">
+          <h4>Manually</h4>
+          <ol>
+            <li>Download the latest <code>.tar</code> release from <a href="https://github.com/chrisjbawden/cockpit-dockermanager/releases" target="_blank">GitHub Releases</a>.</li>
+            <li>Extract contents to your Cockpit applications directory:<br><br>
+            <code>sudo tar -xvf cockpit-dockermanager.tar.gz -C /usr/share/cockpit/</code></li> <br>
+            <li>If Cockpit is already open, refresh your browser.</li>
+          </ol>
+          <div class="callout">
+            <b>Note:</b> You may need to adjust the install path depending on your distro.
+          </div>
+
+          <h4>Scripted - Ubuntu</h4>
+          <ol>
+            <li>Run the following in a terminal</li> <br>
+            <code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code><br><br>
+            <li>If Cockpit is already open, refresh your browser.</li>
+          </ol>
+        </div>
+        </section>
+
+        <!-- Features -->
+        <section class="js-section">
+          <h3 class="section__title">Features</h3>
+          <ul>
+            <li>Start, stop, and restart Docker containers via the UI</li>
+            <li>View container logs</li>
+            <li>Access to host's terminal in the same window</li>
+            <li>CPU and RAM usage stats (auto-refresh every 3 minutes)</li>
+            <li>Search and sort containers by name, status, and image</li>
+            <li>Minimalist design, works great on small screens</li>
+            <li>No support for removing containers or images (by design)</li>
+          </ul>
+          <!-- TODO: Add more feature details or screenshots as needed -->
+        </section>
+
+        <!-- FAQ -->
+        <section class="js-section">
+          <h3 class="section__title">FAQ</h3>
+          <ul>
+            <li><b>Q: I can't see any containers or stats?</b><br>
+              A: Make sure your user is in the <code>docker</code> group, and that Docker is running.
+            </li>
+            <br>
+            <li><b>Q: Why can't I remove containers/images?</b><br>
+              A: This app is intentionally minimal and does not support removal to prevent accidental loss.
+            </li>
+            <br>
+            <li><b>Q: Does this app let me access container terminals?</b><br>
+              A: No, only host-level terminal access is provided.
+            </li>
+            <br>
+            <li><b>Q: How do I update?</b><br>
+              A: You could explore a cron solution, ie; <br>
+              <br>
+              <code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code>
+              <br>
+              <br>
+              There is work to setup a repository to make this easier but this typically does not tend to be distro agnostic. 
+            </li>
+            <!-- TODO: Add/expand more FAQs here -->
+          </ul>
+        </section>
+
+        <!-- Issues & Support -->
+        <section class="js-section">
+          <h3 class="section__title">Issues & Support</h3>
+
+           <p>Report bugs and feature requests via - <a href="https://github.com/chrisjbawden/cockpit-dockermanager/issues" target="_blank">GitHub Issues</a>.</p>
+
+        </section>
+
+        <!-- Contributing -->
+        <section class="js-section">
+          <h3 class="section__title">Contributing</h3>
+          <ul>
+            <li>Pull requests are welcome! Please target the <b>canary</b> branch for new features and testing.</li>
+            <li>Use issues to suggest new features, report bugs, or ask questions.</li>
+            <li>Please follow the <a href="https://guides.github.com/introduction/flow/" target="_blank">GitHub Flow</a>.</li>
+          </ul>
+        </section>
+
+        <!-- Links -->
+        <section class="js-section">
+          <h3 class="section__title">Links</h3>
+          <div style="padding-left: 20px;">
+            <a href="https://cockpit-project.org/" target="_blank">Cockpit Project</a>
+            <br>
+            <a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="_blank">Project GitHub Repo</a>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <footer class="footer">Cockpit Docker Manager &copy; 2025 | <a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="_blank" class="link link--light">GitHub</a></footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="js/scribbler.js"></script>
+  </body>
+</html>

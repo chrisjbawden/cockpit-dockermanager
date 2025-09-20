@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="description" content="">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Docker Manager</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800,900" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/railscasts.min.css">
+      <link rel="stylesheet" href="css/global.css">
+      <link rel="stylesheet" href="css/landing.css">
+      <link rel="author" href="humans.txt">
+  </head>
+  <body>
+    <nav>
+      <div class="logo"></div>
+      <ul class="menu">
+        <div class="menu__item toggle"><span></span></div>
+        <li class="menu__item"><a href="doc.html" class="link link--dark"><i class="fa fa-book"></i>Documentation</a></li>
+        <li class="menu__item"><a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="blank" class="link link--dark"><i class="fa fa-github"></i>Github</a></li>
+      </ul>
+    </nav>
+    <div class="hero">
+      <h1 class="hero__title">Docker Manager</h1>
+      <p class="hero__description">A lite container manager for cockpit</p>
+    
+   <!-- <div class="hero__terminal">
+      <pre>
+        <!-- Place your demo code here -->
+       <!-- <code class="shell-session demo">cli ~ $ </code>-->
+    <!--  </pre>
+    </div>
+<!--
+<div class="wrapper">
+  <div class="installation">
+    <h3 class="section__title center">Installation</h3>
+    <div class="tab__container">
+      <ul class="tab__menu">
+        <!-- <li class="tab active" data-tab="mac">mac</li> -->
+       <!--- <li class="tab active" data-tab="linux">Ubuntu</li> 
+        <!--<li class="tab" data-tab="win">win</li> -->
+     <!-- </ul>
+      <pre class="nohighlight code">
+        <!-- <code class="tab__pane active mac">$  brew install scribbler</code> -->
+       <!-- <code class="tab__pane active linux">$  curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb</code>
+        <!-- <code class="tab__pane win">$  gem install scribbler</code> -->
+     <!-- </pre>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- Lightbox Gallery -->
+<div class="gallery">
+  <img src="interface-main.png" alt="Screenshot 1" onclick="openLightbox(this)">
+  <img src="interface-term.png" alt="Screenshot 2" onclick="openLightbox(this)">
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <span class="close">&times;</span>
+  <img class="lightbox-content" id="lightbox-img">
+</div>
+
+<script>
+  function openLightbox(img) {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+    lightbox.style.display = "block";
+    lightboxImg.src = img.src.replace("_thumb", ""); // assumes large image has no "_thumb"
+  }
+  function closeLightbox() {
+    document.getElementById("lightbox").style.display = "none";
+  }
+</script>
+      </div>
+    
+    <div class="wrapper">
+      <div class="feature">
+        <div class="feature__item">
+          <h3 class="section__title center">Simple</h3>
+          <p>The focus is the basics - with visibility being key.</p>
+        </div>
+        <div class="feature__item">
+          <h3 class="section__title center">Terminal</h3>
+          <p>Terminal is within reach for more complex activities.</p>
+        </div>
+        <div class="feature__item">
+          <h3 class="section__title center">Stats</h3>
+          <p>Easily visible stats for quick situational awareness</p>
+        </div>
+        <div class="feature__item">
+          <h3 class="section__title center">Opensource</h3>
+          <p>All code is auditable.</p>
+        </div>
+
+        <!--
+        <div class="feature__item">
+          <h3 class="section__title center">Highlightings</h3>
+          <p>For better readability, scribbler has a clean, beautiful color scheme allow you to scan files fast.</p>
+        </div>
+        <div class="feature__item">
+          <h3 class="section__title center">Keybindings</h3>
+          <p>You can expect common keybindings for scribbler. Customize <span class="code code--inline">bindings.json</span> for your own liking! </p>
+        </div>
+        -->
+     </div>
+      <!--
+      <div class="keybinding">
+        <ul class="keybinding__detail">
+          <h3 class="keybinding__title">Default Keybindings</h3>
+          <li>Quit without saving <span class="keybinding__label">Ctrl+C</span></li>
+          <li>Save <span class="keybinding__label">Cmd+S</span></li>
+          <li>Save and Quit <span class="keybinding__label">Ctrl+D</span></li>
+          <li>Undo <span class="keybinding__label">Cmd+Z</span></li>
+        </ul>
+        <ul class="keybinding__detail">
+          <h3 class="keybinding__title">Markdown Keybindings</h3>
+          <li><span class="keybinding__label">Ctrl+A</span> Insert Link Markdown</li>
+          <li><span class="keybinding__label">Ctrl+I</span> Insert Image Markdown</li>
+          <li><span class="keybinding__label">Ctrl+V</span> Insert YouTube Video</li>
+          <li><span class="keybinding__label">Ctrl+T</span> Insert Table</li>
+        </ul>
+      </div>
+      -->
+      <div class="callout">
+        <!--<p>Read our documentation for further information on how things works.</p>-->
+        <a href="doc.html" class="button--primary">Documentation</a>
+      </div>
+    </div>
+    <div class="changelog" style="width: 100%;">
+      <div class="wrapper" >
+        <h3 class="section__title center">Changelog</h3>
+        <!--<div class="changelog__item">
+          <div class="changelog__meta">
+            <h4 class="changelog__title">v0.7</h4>
+            <small class="changelog__date">10/12/2017</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>Improving the writing workflow with better key bindings</li>
+              <li>Design updates</li>
+              <li>SSL Verification for web hooks</li>
+              <li>Render Emoji</li>
+            </ul>
+          </div>
+        </div>
+        -->
+        <div class="changelog__item">
+          <div class="changelog__meta center">
+            <h4 class="changelog__title">v1.0.5</h4>
+            <small class="changelog__date">2025</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>Sort by functionality added.</li>
+              <li>Search functionality added.</li>
+              <li>Fixed terminal button</li>
+              <li>Refresh set to 3mins</li>
+            </ul>
+          </div>
+        </div>
+         <div class="changelog__item">
+          <div class="changelog__meta center">
+            <h4 class="changelog__title">v1.0.4</h4>
+            <small class="changelog__date">2025</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>Ability to view container logs.</li>
+              <li>CPU/Memory stats.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="changelog__item">
+          <div class="changelog__meta center">
+            <h4 class="changelog__title">v1.0.3</h4>
+            <small class="changelog__date">2025</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>In window terminal functionality.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="changelog__item">
+          <div class="changelog__meta center">
+            <h4 class="changelog__title">v1.0.2</h4>
+            <small class="changelog__date">2025</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>Bug fixes.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="changelog__item">
+          <div class="changelog__meta center">
+            <h4 class="changelog__title">v1.0.1</h4>
+            <small class="changelog__date">2025</small>
+          </div>
+          <div class="changelog__detail">
+            <ul>
+              <li>Initial conception.</li>
+            </ul>
+          </div>
+        </div>
+        <!--
+        <div class="changelog__callout">
+          <a href="#" class="button--secondary">Checkout Full Log</a>
+        </div>
+        -->
+      </div>
+    </div>
+    <footer class="footer">Cockpit Docker Manager &copy; 2025 | <a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="_blank" class="link link--light">GitHub</a></footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="js/scribbler.js"></script>
+  </body>
+</html>
