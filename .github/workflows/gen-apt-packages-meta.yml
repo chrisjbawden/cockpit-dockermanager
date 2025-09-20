@@ -20,7 +20,7 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Install dpkg-dev and apt-ftparchive
+      - name: Install tools
         run: |
           sudo apt-get update
           sudo apt-get install -y dpkg-dev apt-utils
@@ -33,11 +33,20 @@ jobs:
           mkdir -p \
             dists/stable/main/binary-amd64 \
             dists/stable/main/binary-all \
-            dists/stable \
-            pool/main
+            dists/stable
           : > .nojekyll
 
-      - name: Generate Packages indexes (amd64 + all)
+      - name: Debug - list .debs and git status
+        shell: bash
+        run: |
+          set -e
+          cd docs
+          echo "== .deb files under docs/dists/stable/main/binary-all =="
+          find dists/stable/main/binary-all -maxdepth 1 -type f -name '*.deb' -printf '%f\n' | sort || true
+          echo "== git status before build =="
+          git status --porcelain
+
+      - name: Generate Packages indexes (from binary-all)
         shell: bash
         env:
           GZIP: -n
@@ -45,32 +54,38 @@ jobs:
           set -euo pipefail
           cd docs
 
-          DEB_DIR="pool/main"
+          DEB_DIR="dists/stable/main/binary-all"
+
+          # Fail loudly if no .debs are present
+          if ! find "$DEB_DIR" -maxdepth 1 -type f -name '*.deb' | grep -q .; then
+            echo "::error ::No .deb files found under docs/$DEB_DIR. Add packages then re-run."
+            exit 1
+          fi
+
           TMP_DIR="tmp-aptbuild"
-          rm -rf "$TMP_DIR"
-          mkdir -p "$TMP_DIR"
+          rm -rf "$TMP_DIR"; mkdir -p "$TMP_DIR"
 
-          # Build once for all packages present
-          dpkg-scanpackages --multiversion "$DEB_DIR" /dev/null > "$TMP_DIR/Packages.all" || true
+          # Build package list once (relative to docs/)
+          dpkg-scanpackages --multiversion "$DEB_DIR" /dev/null > "$TMP_DIR/Packages.all"
 
-          # Split by architecture (records are blank-line separated)
-          # binary-amd64 should include both amd64 and all
-          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: (amd64|all)\n/ || /\rArchitecture: (amd64|all)\r/ { print }' \
-            "$TMP_DIR/Packages.all" > dists/stable/main/binary-amd64/Packages || true
+          # binary-all: only Architecture: all
+          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: all\n/ { print }' \
+            "$TMP_DIR/Packages.all" > dists/stable/main/binary-all/Packages
 
-          # binary-all should include only all
-          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: all\n/ || /\rArchitecture: all\r/ { print }' \
-            "$TMP_DIR/Packages.all" > dists/stable/main/binary-all/Packages || true
+          # binary-amd64: include Architecture: all (so amd64 clients see them)
+          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: all\n/ { print }' \
+            "$TMP_DIR/Packages.all" > dists/stable/main/binary-amd64/Packages
 
           # Compress deterministically
-          gzip -n -9 -f dists/stable/main/binary-amd64/Packages
           gzip -n -9 -f dists/stable/main/binary-all/Packages
+          gzip -n -9 -f dists/stable/main/binary-amd64/Packages
 
       - name: Generate Release file (unsigned, with hashes)
         shell: bash
         run: |
           set -euo pipefail
           cd docs
+
           cat > apt-ftparchive.conf <<'EOF'
           APT::FTPArchive::Release {
             Origin "cockpit-dockermanager";
@@ -79,7 +94,7 @@ jobs:
             Codename "stable";
             Architectures "amd64 all";
             Components "main";
-            Description "Minimal repo";
+            Description "Minimal repo (binary-all hosted packages)";
           };
           EOF
 
@@ -92,6 +107,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/dists/stable docs/.nojekyll
-          git commit -m "Regenerate APT Packages and Release [skip ci]" || echo "No changes to commit"
+          # Force-add in case of repo-level ignores
+          git add -f docs/dists/stable docs/.nojekyll
+          git commit -m "Regenerate APT Packages (from binary-all) and Release [skip ci]" || echo "No changes to commit"
           git push origin "HEAD:${BRANCH_NAME}"
