@@ -76,10 +76,11 @@ jobs:
 
           # Build Packages for each arch
           apt-ftparchive -c apt-ftparchive.conf packages dists/stable/main/binary-all > dists/stable/main/binary-all/Packages
-          gzip -9f dists/stable/main/binary-all/Packages
-
+          gzip -9c dists/stable/main/binary-all/Packages > dists/stable/main/binary-all/Packages.gz
+          
           apt-ftparchive -c apt-ftparchive.conf packages dists/stable/main/binary-amd64 > dists/stable/main/binary-amd64/Packages
-          gzip -9f dists/stable/main/binary-amd64/Packages
+          gzip -9c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
+
 
           # Build Release file with correct checksums
           apt-ftparchive -c apt-ftparchive.conf release dists/stable > dists/stable/Release
