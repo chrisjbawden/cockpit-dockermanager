@@ -1,0 +1,70 @@
+Package: dockermanager
+Architecture: all
+Version: 1.0.1
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Filename: dists/stable/main/binary-all/dockermanager-1.0.1.deb
+Size: 3406
+MD5sum: cbe72aa99f0d3b72a56b9a2eaee08984
+SHA1: e51881245de0cf3f19a7c6621d0b2e8eb928f080
+SHA256: 014c3f21310aedb8f4e1bef0a29c5717e9036e5cf677d3de3dfc701cfb1d423c
+SHA512: 30771518927720d1a01bb0055b3a2d8e31135e2235f3780443a2ad3d36a446f44f4d0c06a957661a9e9dcf95d0f6620681b40adeab7d5b42f75e16461402047d
+Description: Cockpit plugin – Docker Manager UI
+
+Package: dockermanager
+Architecture: all
+Version: 1.0.2
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Filename: dists/stable/main/binary-all/dockermanager-1.0.2.deb
+Size: 3476
+MD5sum: 8e5de7243714c711832a5c89c790dd25
+SHA1: dc08e497c4d03ace9d381aa766ab7bf17873bf47
+SHA256: ef3f9cb6af9957140470510d364b86ae17b02db19bb4168e646d0b04156aecb1
+SHA512: ddea57e977761f8938578ad46a3a5262acd8f8134bd75263c09d2c26f9dd22a4ffe3869c7aa6d787adcfd91128eebe3413e18c77de53db0e5bfbc81c3e0d0cab
+Description: Cockpit plugin – Docker Manager UI
+
+Package: dockermanager
+Architecture: all
+Version: 1.0.3
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Filename: dists/stable/main/binary-all/dockermanager-1.0.3.deb
+Size: 5174
+MD5sum: 059409aecf9e0b178825b10e2edcfc11
+SHA1: d0413209136aa60f68ab65c7876ff23bb64867b1
+SHA256: 4c86196b6bf50e1978ba3c7802ddb025af4793a772ba4b1c820b50aad4b0230e
+SHA512: 216b7d682c31d6e74bca0522b7119ccf3f83b3d9dae025d740b6d0452f6c7a50608026daf627def0049921f25edae18483eb4f951f44dc61ce51ea6cbe95daaa
+Description: Cockpit plugin – Docker Manager UI
+
+Package: dockermanager
+Architecture: all
+Version: 1.0.4
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Filename: dists/stable/main/binary-all/dockermanager-1.0.4.deb
+Size: 6738
+MD5sum: bf85ec0a80483ed934efd967bdf8e08f
+SHA1: 63799687fa829683142bdce08e9857907e05aa9f
+SHA256: 1532813e1ce1d31c4da53484d588da35f497c244f7673e07af4ba53440567168
+SHA512: da945ae5bde6b05f0540b710b1ddf5d298ce75cd8ef852a6aa1e3199b2bcb81a6e46fafde5231743f43307c00f3b1a5f4b8185045ef4f3c27dcd05f6499029f5
+Description: Cockpit plugin – Docker Manager UI
+
+Package: dockermanager
+Architecture: all
+Version: 1.0.5
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Filename: dists/stable/main/binary-all/dockermanager-1.0.5.deb
+Size: 9534
+MD5sum: 917e43ee8982b4fbb9626c1cc2ff249c
+SHA1: 3e93402007acb215e18f016aa127a78f19787e19
+SHA256: 1f6ad9a4ed4e213fb0e90d0e5e409e688121055a89c9f2476d899887c6cd8278
+SHA512: 6981fa36f248e7da5281dbbdfe864d2b73ece279ee0a2ecb00f962c56a0fd5016f484c862332b1dbcc1194d63236bf9ed89300c6cc03ba03bfaf6f3bbfb9b4bc
+Description: Cockpit plugin – Docker Manager UI
+
