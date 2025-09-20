@@ -1,7 +1,7 @@
 name: Generate APT Packages Metadata
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:  # Manual trigger from the Actions tab
 
 jobs:
   build-packages-metadata:
@@ -10,52 +10,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install tooling
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev gzip
+      - name: Install dpkg-dev
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
 
-      - name: Prepare repo structure
+      - name: Generate Packages and Packages.gz (all)
         run: |
-          set -e
-          set -u
-          set -o pipefail
           cd docs
-          mkdir -p pool/main
-          mkdir -p dists/stable/main/binary-amd64
           mkdir -p dists/stable/main/binary-all
-          mkdir -p dists/stable/main/i18n
-          mkdir -p dists/stable/main/cnf
-          # Place your .deb files under docs/pool/main/**
+          dpkg-scanpackages --multiversion pool/main /dev/null > dists/stable/main/binary-all/Packages
+          gzip -9 -f dists/stable/main/binary-all/Packages
 
-      - name: Generate Packages (from pool) and split by arch
+      - name: Generate Packages and Packages.gz (amd64)
         run: |
-          set -e
-          set -u
-          set -o pipefail
           cd docs
+          mkdir -p dists/stable/main/binary-amd64
+          dpkg-scanpackages --arch amd64 pool/main /dev/null > dists/stable/main/binary-amd64/Packages
+          gzip -9 -f dists/stable/main/binary-amd64/Packages
 
-          # Build complete Packages from the pool
-          dpkg-scanpackages --multiversion pool/main /dev/null > /tmp/Packages.full
-
-          # amd64 list: includes both amd64 and all
-          awk -v RS='' '/(^|\n)Architecture: (amd64|all)(\n|$)/ { print }' /tmp/Packages.full \
-            > dists/stable/main/binary-amd64/Packages
-
-          # all list: only Architecture: all
-          awk -v RS='' '/(^|\n)Architecture: all(\n|$)/ { print }' /tmp/Packages.full \
-            > dists/stable/main/binary-all/Packages
-
-          # Compress (keep uncompressed too)
-          gzip -9fk dists/stable/main/binary-amd64/Packages
-          gzip -9fk dists/stable/main/binary-all/Packages
-
-      - name: Quiet optional APT indexes (suppress Ign: lines)
+      - name: Add quiet files for Translation, Contents, c-n-f
         run: |
-          set -e
-          set -u
-          set -o pipefail
           cd docs
+          mkdir -p dists/stable/main/i18n dists/stable/main/cnf
 
           # Translations
           : > dists/stable/main/i18n/Translation-en
@@ -64,21 +39,16 @@ jobs:
 
           # Contents
           : > dists/stable/main/Contents-amd64
-          gzip -fk dists/stable/main/Contents-amd64
           : > dists/stable/main/Contents-all
-          gzip -fk dists/stable/main/Contents-all
+          gzip -fk dists/stable/main/Contents-amd64 dists/stable/main/Contents-all
 
-          # command-not-found (cnf)
+          # command-not-found
           : > dists/stable/main/cnf/Commands-amd64
-          gzip -fk dists/stable/main/cnf/Commands-amd64
           : > dists/stable/main/cnf/Commands-all
-          gzip -fk dists/stable/main/cnf/Commands-all
+          gzip -fk dists/stable/main/cnf/Commands-amd64 dists/stable/main/cnf/Commands-all
 
-      - name: Generate minimal Release (unsigned)
+      - name: Generate minimal Release file
         run: |
-          set -e
-          set -u
-          set -o pipefail
           cd docs
           cat > dists/stable/Release <<'REL'
           Origin: cockpit-dockermanager
@@ -87,20 +57,14 @@ jobs:
           Codename: stable
           Architectures: amd64 all
           Components: main
-          Description: Minimal APT repository on GitHub Pages
+          Description: Minimal repo
           Languages: en
           REL
 
       - name: Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
-          set -u
-          set -o pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/dists/stable
-          git commit -m "Update APT metadata (Packages, quiet indexes, Release) [skip ci]" || echo "No changes to commit"
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          git push origin "HEAD:${BRANCH:-main}"
+          git commit -m "Auto-generate full APT repo metadata [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
