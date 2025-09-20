@@ -1,7 +1,7 @@
 name: Generate APT Packages Metadata
 
 on:
-  workflow_dispatch:  # Manual run from Actions tab
+  workflow_dispatch: {}
 
 jobs:
   build-packages-metadata:
@@ -17,39 +17,44 @@ jobs:
 
       - name: Prepare repo structure
         run: |
-          set -euo pipefail
+          set -e
+          set -u
+          set -o pipefail
           cd docs
           mkdir -p pool/main
           mkdir -p dists/stable/main/binary-amd64
           mkdir -p dists/stable/main/binary-all
           mkdir -p dists/stable/main/i18n
           mkdir -p dists/stable/main/cnf
-          # your .deb files should live under docs/pool/main/**
+          # Place your .deb files under docs/pool/main/**
 
       - name: Generate Packages (from pool) and split by arch
         run: |
-          set -euo pipefail
+          set -e
+          set -u
+          set -o pipefail
           cd docs
 
-          # Build a complete Packages listing from the pool
+          # Build complete Packages from the pool
           dpkg-scanpackages --multiversion pool/main /dev/null > /tmp/Packages.full
 
-          # Split stanzas by architecture (blank-line–separated paragraphs)
-          # amd64 file should include both amd64 and all
-          awk -v RS="" '/\nArchitecture: (all|amd64)\n/ {print}' /tmp/Packages.full \
+          # amd64 list: includes both amd64 and all
+          awk -v RS='' '/(^|\n)Architecture: (amd64|all)(\n|$)/ { print }' /tmp/Packages.full \
             > dists/stable/main/binary-amd64/Packages
 
-          # all file contains only Architecture: all
-          awk -v RS="" '/\nArchitecture: all\n/ {print}' /tmp/Packages.full \
+          # all list: only Architecture: all
+          awk -v RS='' '/(^|\n)Architecture: all(\n|$)/ { print }' /tmp/Packages.full \
             > dists/stable/main/binary-all/Packages
 
           # Compress (keep uncompressed too)
           gzip -9fk dists/stable/main/binary-amd64/Packages
           gzip -9fk dists/stable/main/binary-all/Packages
 
-      - name: Quiet optional APT indexes (to suppress Ign: lines)
+      - name: Quiet optional APT indexes (suppress Ign: lines)
         run: |
-          set -euo pipefail
+          set -e
+          set -u
+          set -o pipefail
           cd docs
 
           # Translations
@@ -57,19 +62,23 @@ jobs:
           gzip -fk dists/stable/main/i18n/Translation-en
           cp dists/stable/main/i18n/Translation-en.gz dists/stable/main/i18n/Translation-en_US.gz
 
-          # Contents (minimal empty files)
+          # Contents
           : > dists/stable/main/Contents-amd64
+          gzip -fk dists/stable/main/Contents-amd64
           : > dists/stable/main/Contents-all
-          gzip -fk dists/stable/main/Contents-amd64 dists/stable/main/Contents-all
+          gzip -fk dists/stable/main/Contents-all
 
-          # command-not-found metadata (empty)
+          # command-not-found (cnf)
           : > dists/stable/main/cnf/Commands-amd64
+          gzip -fk dists/stable/main/cnf/Commands-amd64
           : > dists/stable/main/cnf/Commands-all
-          gzip -fk dists/stable/main/cnf/Commands-amd64 dists/stable/main/cnf/Commands-all
+          gzip -fk dists/stable/main/cnf/Commands-all
 
       - name: Generate minimal Release (unsigned)
         run: |
-          set -euo pipefail
+          set -e
+          set -u
+          set -o pipefail
           cd docs
           cat > dists/stable/Release <<'REL'
           Origin: cockpit-dockermanager
@@ -86,11 +95,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
+          set -e
+          set -u
+          set -o pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/dists/stable
           git commit -m "Update APT metadata (Packages, quiet indexes, Release) [skip ci]" || echo "No changes to commit"
-          # Push back to the same branch this workflow ran on
           BRANCH="${GITHUB_REF#refs/heads/}"
           git push origin "HEAD:${BRANCH:-main}"
