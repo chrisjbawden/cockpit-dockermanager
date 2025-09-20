@@ -1,0 +1,145 @@
+name: Build CANARY DEB Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Canary package version (e.g. 1.0.6 or 1.0.6.1)"
+        required: true
+        default: "1.0.6"
+
+permissions:
+  contents: write
+
+jobs:
+  build-canary:
+    runs-on: ubuntu-latest
+
+    env:
+      # Package identity and paths
+      PKG_NAME: dockermanager-canary         # debian control Package: field
+      PAYLOAD_DIR_NAME: dockermanager        # install path under /usr/share/cockpit/<this>
+      BUILD_DIR: build                       # temporary build root
+
+    steps:
+      # -------------------------------------------------------------------
+      # 1) Checkout the canary branch 
+      # -------------------------------------------------------------------
+      - name: Checkout repository (canary branch)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: canary
+          persist-credentials: true
+
+      # -------------------------------------------------------------------
+      # 2) Prepare packaging tree
+      # -------------------------------------------------------------------
+      - name: Prepare packaging structure
+        run: |
+          rm -rf "$BUILD_DIR"
+          mkdir -p "$BUILD_DIR/DEBIAN"
+          mkdir -p "$BUILD_DIR/usr/share/cockpit/$PAYLOAD_DIR_NAME"
+
+          # Copy plugin files (adjust if your source dir is different)
+          cp -rT "dockermanager" "$BUILD_DIR/usr/share/cockpit/$PAYLOAD_DIR_NAME"
+
+      # -------------------------------------------------------------------
+      # 3) Generate control file (CANARY)
+      #    NOTE:
+      #      - Conflicts/Replaces ensures canary replaces stable cleanly.
+      # -------------------------------------------------------------------
+      - name: Generate control file
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          cat > "$BUILD_DIR/DEBIAN/control" <<EOF
+          Package: $PKG_NAME
+          Version: $VERSION
+          Section: admin
+          Priority: optional
+          Architecture: all
+          Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+          Conflicts: dockermanager
+          Replaces: dockermanager
+          Description: Cockpit plugin – Docker Manager UI (CANARY channel)
+           Canary channel with latest changes for testing.
+          EOF
+
+          chmod 0755 "$BUILD_DIR/DEBIAN"
+          chmod 0644 "$BUILD_DIR/DEBIAN/control"
+
+      # -------------------------------------------------------------------
+      # 4) Build the .deb and provide convenient filenames
+      # -------------------------------------------------------------------
+      - name: Build CANARY .deb
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          dpkg-deb --build --root-owner-group "$BUILD_DIR" \
+                   "${PKG_NAME}_${VERSION}_all.deb"
+
+          # Friendly aliases for downloads / releases
+          cp "${PKG_NAME}_${VERSION}_all.deb" "${PKG_NAME}-${VERSION}.deb"
+          cp "${PKG_NAME}_${VERSION}_all.deb" "${PKG_NAME}.deb"
+
+      # -------------------------------------------------------------------
+      # 5) Move tags: versioned (-canary) and rolling (latest-canary)
+      #    - Delete/recreate to ensure they always point at this commit
+      # -------------------------------------------------------------------
+      - name: Move CANARY version tag to current commit
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin
+          git tag -d "v${VERSION}-canary" || true
+          git push origin :refs/tags/v${VERSION}-canary || true
+          git tag "v${VERSION}-canary"
+          git push origin "v${VERSION}-canary" --force
+
+      - name: Move 'latest-canary' tag to current commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin
+          git tag -d latest-canary || true
+          git push origin :refs/tags/latest-canary || true
+          git tag latest-canary
+          git push origin latest-canary --force
+
+      # -------------------------------------------------------------------
+      # 6a) Create/Update versioned CANARY Release and upload versioned .deb
+      # -------------------------------------------------------------------
+      - name: Create/Update versioned CANARY Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}-canary
+          name: "DockerManager CANARY v${{ github.event.inputs.version }}"
+          body: |
+            Automated CANARY release for DockerManager v${{ github.event.inputs.version }}.
+            Package name: dockermanager-canary
+          draft: false
+          prerelease: true
+          files: |
+            dockermanager-canary-${{ github.event.inputs.version }}.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------------------------------------------------------
+      # 6b) Create/Update rolling 'latest-canary' Release and upload .deb
+      # -------------------------------------------------------------------
+      - name: Create/Update latest CANARY Release (rolling download)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-canary
+          name: "DockerManager CANARY – Latest"
+          body: |
+            Rolling canary release. Always points to the most recent build.
+          draft: false
+          prerelease: true
+          files: |
+            dockermanager-canary.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
