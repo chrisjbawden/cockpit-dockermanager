@@ -73,47 +73,27 @@ jobs:
           gzip -n -9 -f dists/stable/main/binary-amd64/Packages
           gzip -n -9 -f dists/stable/main/binary-all/Packages
 
-      - name: Add quiet files for Translation, Contents, c-n-f
-        shell: bash
-        env:
-          GZIP: -n
-        run: |
-          set -euo pipefail
-          cd docs
-
-          # Translations (empty but present)
-          : > dists/stable/main/i18n/Translation-en
-          gzip -n -fk dists/stable/main/i18n/Translation-en
-          cp dists/stable/main/i18n/Translation-en.gz dists/stable/main/i18n/Translation-en_US.gz
-          cp dists/stable/main/i18n/Translation-en.gz dists/stable/main/i18n/Translation-en_AU.gz
-
-          # Contents (empty but present)
-          : > dists/stable/main/Contents-amd64
-          : > dists/stable/main/Contents-all
-          gzip -n -fk dists/stable/main/Contents-amd64 dists/stable/main/Contents-all
-
-          # command-not-found (empty but present)
-          : > dists/stable/main/cnf/Commands-amd64
-          : > dists/stable/main/cnf/Commands-all
-          gzip -n -fk dists/stable/main/cnf/Commands-amd64 dists/stable/main/cnf/Commands-all
-
-      - name: Generate minimal Release file (unsigned)
+      - name: Generate Release file (unsigned, with hashes)
         shell: bash
         run: |
           set -euo pipefail
           cd docs
-          RELEASE_FILE="dists/stable/Release"
-          {
-            printf 'Origin: %s\n' "cockpit-dockermanager"
-            printf 'Label: %s\n' "cockpit-dockermanager"
-            printf 'Suite: %s\n' "stable"
-            printf 'Codename: %s\n' "stable"
-            printf 'Architectures: %s\n' "amd64 all"
-            printf 'Components: %s\n' "main"
-            printf 'Description: %s\n' "Minimal repo"
-            printf 'Languages: %s\n' "en"
-          } > "$RELEASE_FILE"
 
+          cat > apt-ftparchive.conf <<'EOF'
+          APT::FTPArchive::Release {
+            Origin "cockpit-dockermanager";
+            Label "cockpit-dockermanager";
+            Suite "stable";
+            Codename "stable";
+            Architectures "amd64 all";
+            Components "main";
+            Description "Minimal repo";
+          };
+          EOF
+
+          apt-ftparchive -c apt-ftparchive.conf release dists/stable > dists/stable/Release
+          rm -f apt-ftparchive.conf
+          
       - name: Commit and push changes
         env:
           BRANCH_NAME: ${{ github.ref_name }}
