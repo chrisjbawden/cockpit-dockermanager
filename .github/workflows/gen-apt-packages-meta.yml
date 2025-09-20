@@ -32,8 +32,7 @@ jobs:
           cd docs
           mkdir -p \
             dists/stable/main/binary-amd64 \
-            dists/stable/main/binary-all \
-            dists/stable
+            dists/stable/main/binary-all
           : > .nojekyll
 
       - name: Debug - list .debs and git status
@@ -46,47 +45,24 @@ jobs:
           echo "== git status before build =="
           git status --porcelain
 
-      - name: Generate Packages indexes (from binary-all)
-        shell: bash
-        env:
-          GZIP: -n
-        run: |
-          set -euo pipefail
-          cd docs
-
-          DEB_DIR="dists/stable/main/binary-all"
-
-          # Fail loudly if no .debs are present
-          if ! find "$DEB_DIR" -maxdepth 1 -type f -name '*.deb' | grep -q .; then
-            echo "::error ::No .deb files found under docs/$DEB_DIR. Add packages then re-run."
-            exit 1
-          fi
-
-          TMP_DIR="tmp-aptbuild"
-          rm -rf "$TMP_DIR"; mkdir -p "$TMP_DIR"
-
-          # Build package list once (relative to docs/)
-          dpkg-scanpackages --multiversion "$DEB_DIR" /dev/null > "$TMP_DIR/Packages.all"
-
-          # binary-all: only Architecture: all
-          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: all\n/ { print }' \
-            "$TMP_DIR/Packages.all" > dists/stable/main/binary-all/Packages
-
-          # binary-amd64: include Architecture: all (so amd64 clients see them)
-          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: all\n/ { print }' \
-            "$TMP_DIR/Packages.all" > dists/stable/main/binary-amd64/Packages
-
-          # Compress deterministically
-          gzip -n -9 -f dists/stable/main/binary-all/Packages
-          gzip -n -9 -f dists/stable/main/binary-amd64/Packages
-
-      - name: Generate Release file (unsigned, with hashes)
+      - name: Generate Packages and Release
         shell: bash
         run: |
           set -euo pipefail
           cd docs
 
+          # Create apt-ftparchive config
           cat > apt-ftparchive.conf <<'EOF'
+          Dir {
+            ArchiveDir ".";
+          };
+          Default {
+            Packages::Compress ". gzip";
+          };
+          Tree "dists/stable" {
+            Sections "main";
+            Architectures "amd64 all";
+          };
           APT::FTPArchive::Release {
             Origin "cockpit-dockermanager";
             Label "cockpit-dockermanager";
@@ -98,7 +74,16 @@ jobs:
           };
           EOF
 
+          # Build Packages for each arch
+          apt-ftparchive -c apt-ftparchive.conf packages dists/stable/main/binary-all > dists/stable/main/binary-all/Packages
+          gzip -9f dists/stable/main/binary-all/Packages
+
+          apt-ftparchive -c apt-ftparchive.conf packages dists/stable/main/binary-amd64 > dists/stable/main/binary-amd64/Packages
+          gzip -9f dists/stable/main/binary-amd64/Packages
+
+          # Build Release file with correct checksums
           apt-ftparchive -c apt-ftparchive.conf release dists/stable > dists/stable/Release
+
           rm -f apt-ftparchive.conf
 
       - name: Commit and push changes
@@ -107,7 +92,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Force-add in case of repo-level ignores
           git add -f docs/dists/stable docs/.nojekyll
-          git commit -m "Regenerate APT Packages (from binary-all) and Release [skip ci]" || echo "No changes to commit"
+          git commit -m "Regenerate APT Packages and Release [skip ci]" || echo "No changes to commit"
           git push origin "HEAD:${BRANCH_NAME}"
