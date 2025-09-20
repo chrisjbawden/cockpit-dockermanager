@@ -1,0 +1,8 @@
+Origin: cockpit-dockermanager
+Label: cockpit-dockermanager
+Suite: stable
+Codename: stable
+Architectures: amd64 all
+Components: main
+Description: Minimal repo
+Languages: en
