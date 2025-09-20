@@ -3,77 +3,115 @@ name: Generate APT Packages Metadata
 on:
   workflow_dispatch:  # Manual trigger from the Actions tab
 
+permissions:
+  contents: write
+
 jobs:
   build-packages-metadata:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git safe directory
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Install dpkg-dev
-        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev
+
+      - name: Prepare structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd docs
+          mkdir -p \
+            dists/stable/main/binary-amd64 \
+            dists/stable/main/binary-all \
+            dists/stable/main/i18n \
+            dists/stable/main/cnf \
+            dists/stable \
+            pool/main
+          # Avoid Pages/Jekyll quirks
+          : > .nojekyll
 
       - name: Generate Packages indexes (amd64 + all)
         shell: bash
+        env:
+          GZIP: -n
         run: |
           set -euo pipefail
           cd docs
-          mkdir -p dists/stable/main/binary-amd64 dists/stable/main/binary-all tmp
 
-          # Where your .deb files live (adjust if different)
           DEB_DIR="pool/main"
+          TMP_DIR="tmp-aptbuild"
+          rm -rf "$TMP_DIR"
+          mkdir -p "$TMP_DIR"
 
-          # Build a complete Packages listing once
-          dpkg-scanpackages --multiversion "$DEB_DIR" /dev/null > tmp/Packages.all_arches
+          # Build once for all packages present
+          dpkg-scanpackages --multiversion "$DEB_DIR" /dev/null > "$TMP_DIR/Packages.all" || true
 
+          # Extract stanzas by architecture (records are blank-line separated)
           # binary-amd64 should include both amd64 and all
-          awk -v RS= -v ORS="\n\n" '/\nArchitecture: (amd64|all)\n/' tmp/Packages.all_arches > dists/stable/main/binary-amd64/Packages
+          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: (amd64|all)\n/ || /\rArchitecture: (amd64|all)\r/ { print }' \
+            "$TMP_DIR/Packages.all" > dists/stable/main/binary-amd64/Packages || true
 
-          # binary-all should include only "all"
-          awk -v RS= -v ORS="\n\n" '/\nArchitecture: all\n/' tmp/Packages.all_arches > dists/stable/main/binary-all/Packages
+          # binary-all should include only all
+          awk -v RS='' -v ORS="\n\n" '/\nArchitecture: all\n/ || /\rArchitecture: all\r/ { print }' \
+            "$TMP_DIR/Packages.all" > dists/stable/main/binary-all/Packages || true
 
-          # Compress
-          gzip -9 -f dists/stable/main/binary-amd64/Packages
-          gzip -9 -f dists/stable/main/binary-all/Packages
+          # Ensure files exist even if empty
+          : > dists/stable/main/binary-amd64/Packages
+          : > dists/stable/main/binary-all/Packages
+
+          # Compress deterministically
+          gzip -n -9 -f dists/stable/main/binary-amd64/Packages
+          gzip -n -9 -f dists/stable/main/binary-all/Packages
 
       - name: Add quiet files for Translation, Contents, c-n-f
         shell: bash
+        env:
+          GZIP: -n
         run: |
           set -euo pipefail
           cd docs
-          mkdir -p dists/stable/main/i18n dists/stable/main/cnf
 
           # Translations (empty but present)
           : > dists/stable/main/i18n/Translation-en
-          gzip -fk dists/stable/main/i18n/Translation-en
+          gzip -n -fk dists/stable/main/i18n/Translation-en
           cp dists/stable/main/i18n/Translation-en.gz dists/stable/main/i18n/Translation-en_US.gz
+          cp dists/stable/main/i18n/Translation-en.gz dists/stable/main/i18n/Translation-en_AU.gz
 
           # Contents (empty but present)
           : > dists/stable/main/Contents-amd64
           : > dists/stable/main/Contents-all
-          gzip -fk dists/stable/main/Contents-amd64 dists/stable/main/Contents-all
+          gzip -n -fk dists/stable/main/Contents-amd64 dists/stable/main/Contents-all
 
           # command-not-found (empty but present)
           : > dists/stable/main/cnf/Commands-amd64
           : > dists/stable/main/cnf/Commands-all
-          gzip -fk dists/stable/main/cnf/Commands-amd64 dists/stable/main/cnf/Commands-all
+          gzip -n -fk dists/stable/main/cnf/Commands-amd64 dists/stable/main/cnf/Commands-all
 
       - name: Generate minimal Release file (unsigned)
         shell: bash
         run: |
           set -euo pipefail
           cd docs
-          mkdir -p dists/stable
           RELEASE_FILE="dists/stable/Release"
           {
-            printf '%s\n' "Origin: cockpit-dockermanager"
-            printf '%s\n' "Label: cockpit-dockermanager"
-            printf '%s\n' "Suite: stable"
-            printf '%s\n' "Codename: stable"
-            printf '%s\n' "Architectures: amd64 all"
-            printf '%s\n' "Components: main"
-            printf '%s\n' "Description: Minimal repo"
-            printf '%s\n' "Languages: en"
+            printf 'Origin: %s\n' "cockpit-dockermanager"
+            printf 'Label: %s\n' "cockpit-dockermanager"
+            printf 'Suite: %s\n' "stable"
+            printf 'Codename: %s\n' "stable"
+            printf 'Architectures: %s\n' "amd64 all"
+            printf 'Components: %s\n' "main"
+            printf 'Description: %s\n' "Minimal repo"
+            printf 'Languages: %s\n' "en"
           } > "$RELEASE_FILE"
 
       - name: Commit and push changes
@@ -82,6 +120,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/dists/stable
+          git add docs/dists/stable docs/.nojekyll
           git commit -m "Auto-generate full APT repo metadata [skip ci]" || echo "No changes to commit"
           git push origin "HEAD:${BRANCH_NAME}"
