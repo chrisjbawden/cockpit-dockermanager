@@ -34,6 +34,11 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 ### Changelog
 
+#### v1.0.6
+
+- Added functionality to pin/fix header
+- Added functionality to manage images
+
 #### v1.0.5
 
 - Added "sort-by" functionality
