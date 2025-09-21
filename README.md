@@ -16,6 +16,7 @@
 - ✅ List, start, stop, and restart containers
 - 🔍 View container status, uptime, and exposed ports
 - 💻 In window terminal
+- 💾 Image management
 
 ## 🛠️ Installation
 
