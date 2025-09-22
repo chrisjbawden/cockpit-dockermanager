@@ -20,7 +20,7 @@ header {
   font-size: 0.95em;
   transition: background 0.2s ease;
   margin-right: 15px;
-  margin-top: 20px;
+  margin-top: 4px;
 }
 .refresh-button:hover {
   background: #218838;
@@ -137,7 +137,7 @@ header {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 20px;
+  margin-top: 4px;
 }
 #terminal-toggle-btn:hover { opacity: 0.9; }
 #terminal-toggle-btn svg { width: 18px; height: 18px; }
@@ -457,7 +457,7 @@ select::-ms-expand { display: none; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 20px;
+  margin-top: 4px;
 }
 #image-toggle-btn:hover { opacity: 0.9; }
 #image-toggle-btn svg { width: 18px; height: 18px; }
@@ -529,7 +529,9 @@ select::-ms-expand { display: none; }
   left: 0;
   right: 0;
   z-index: 500;
-  padding: 20px;
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
   background: #1e1e1e;           /* same as body background */
   border-bottom: 1px solid #444; /* subtle divider */
 }
