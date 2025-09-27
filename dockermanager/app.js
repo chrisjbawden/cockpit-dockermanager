@@ -55,11 +55,197 @@ document.addEventListener("DOMContentLoaded", () => {
       currentSort = sortSelect.value;
       try { localStorage.setItem('sortBy', currentSort); } catch (_) {}
       rememberFocus();
-      loadContainers(() => {
+      reloadContainers(() => {
         restoreRememberedFocus();
-      });
+      }, true);
     });
   }
+
+  // --- PIN HEADER TOGGLE ---
+  const header = document.getElementById("app-header");
+  const pinBtn = document.getElementById("pin-btn");
+  const spacer = document.getElementById("header-spacer");
+
+  if (header && pinBtn && spacer) {
+    function applyPinnedState(isPinned, persist = true) {
+      if (isPinned) {
+        header.classList.add("pinned");
+        spacer.style.height = `${header.offsetHeight}px`; // reserve space
+        pinBtn.classList.add("is-pinned");
+      } else {
+        header.classList.remove("pinned");
+        spacer.style.height = "0";
+        pinBtn.classList.remove("is-pinned");
+      }
+      if (persist) localStorage.setItem("headerPinned", String(isPinned));
+    }
+
+    // Load saved preference
+    const savedPinned = localStorage.getItem("headerPinned") === "true";
+    applyPinnedState(savedPinned, false);
+
+    // Toggle on click
+    pinBtn.addEventListener("click", () => {
+      applyPinnedState(!header.classList.contains("pinned"));
+    });
+
+    // Adjust spacer if window resizes
+    window.addEventListener("resize", () => {
+      if (header.classList.contains("pinned")) {
+        spacer.style.height = `${header.offsetHeight}px`;
+      }
+    });
+  }
+
+  // Image modal trigger
+  const imageToggleBtn = document.getElementById("image-toggle-btn");
+  imageToggleBtn?.addEventListener("click", () => {
+    showImagesModal();
+  });
+
+  // ------- Images Modal -------
+  function showImagesModal() {
+    let modal = document.getElementById("images-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "images-modal";
+      modal.className = "logs-modal"; // reuse logs modal styles
+
+      modal.innerHTML = `
+        <div class="logs-modal-content">
+          <div class="logs-modal-header">
+            <h3>Docker Images</h3>
+            <div class="logs-controls">
+              <button id="images-refresh-btn" class="logs-btn">↻ Refresh</button>
+              <button id="images-prune-btn" class="logs-btn">🧹 Prune Dangling</button>
+              <button id="images-close-btn" class="logs-btn">✖️ Close</button>
+            </div>
+          </div>
+          <div id="images-content" class="logs-content">
+            <div class="loading">Loading images…</div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      // Wire modal controls
+      document.getElementById("images-close-btn").addEventListener("click", () => {
+        modal.style.display = "none";
+      });
+
+      document.getElementById("images-refresh-btn").addEventListener("click", () => {
+        loadImagesList();
+      });
+
+      const pruneBtn = document.getElementById("images-prune-btn");
+      pruneBtn.addEventListener("click", () => {
+        const content = document.getElementById("images-content");
+
+        // Busy state
+        pruneBtn.disabled = true;
+        pruneBtn.classList.add("loading");
+        const oldLabel = pruneBtn.textContent;
+        pruneBtn.textContent = "Pruning…";
+
+        // Optional: show status inside modal
+        const prevHTML = content.innerHTML;
+        content.innerHTML = `<div class="loading">Pruning dangling images…</div>`;
+
+        cockpit.spawn(["docker", "image", "prune", "-f"], { err: "message" })
+          .then(() => loadImagesList())
+          .catch(err => {
+            showBanner(`❌ Prune failed: ${escapeHtml(String(err))}`);
+            content.innerHTML = prevHTML; // restore list if failed
+          })
+          .finally(() => {
+            pruneBtn.disabled = false;
+            pruneBtn.classList.remove("loading");
+            pruneBtn.textContent = oldLabel;
+          });
+      });
+
+
+      // Click outside to close
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+    }
+
+    modal.style.display = "block";
+    loadImagesList();
+  }
+
+  function loadImagesList() {
+    const content = document.getElementById("images-content");
+    if (!content) return;
+    content.innerHTML = `<div class="loading">Loading images…</div>`;
+
+    // Repo:Tag, ID, Size, CreatedSince
+    const fmt = "{{.Repository}}:{{.Tag}}\\t{{.ID}}\\t{{.Size}}\\t{{.CreatedSince}}";
+    cockpit.spawn(["docker", "images", "--format", fmt], { err: "message" })
+      .then(output => {
+        const lines = output.trim() ? output.trim().split("\n") : [];
+        if (lines.length === 0) {
+          content.innerHTML = `<div class="empty">No Docker images found.</div>`;
+          return;
+        }
+
+        // Build list
+        const rows = lines.map(line => {
+          const [repoTag, id, size, age] = line.split("\t");
+          const displayName = (repoTag && repoTag !== "<none>:<none>") ? repoTag : "(dangling)";
+          const shortId = id?.replace(/^sha256:/, "").slice(0, 12) || "unknown";
+
+          return `
+            <div class="image-row">
+              <div class="image-meta">
+                <span class="image-name">${escapeHtml(displayName)}</span>
+                <span class="image-id">ID: ${escapeHtml(shortId)}</span>
+                <span class="image-size">Size: ${escapeHtml(size || "n/a")}</span>
+                <span class="image-age">Created: ${escapeHtml(age || "n/a")}</span>
+              </div>
+              <div class="image-actions">
+                <button class="logs-btn image-danger" data-image-id="${id}">🗑️ Delete</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        content.innerHTML = `<div class="images-list">${rows}</div>`;
+
+        // Wire delete buttons
+        content.querySelectorAll('[data-image-id]').forEach(btn => {
+          btn.addEventListener("click", () => {
+            const imageId = btn.getAttribute("data-image-id");
+            if (!imageId) return;
+            deleteImage(imageId, btn);
+          });
+        });
+      })
+      .catch(err => {
+        content.innerHTML = `<div class="error">Failed to load images: ${escapeHtml(String(err))}</div>`;
+      });
+  }
+
+  function deleteImage(imageId, buttonEl) {
+    const shortId = imageId.replace(/^sha256:/, "").slice(0, 12);
+
+    const originalText = buttonEl.textContent;
+    buttonEl.disabled = true;
+    buttonEl.textContent = "Deleting…";
+
+    cockpit.spawn(["docker", "rmi", imageId], { err: "message" })
+      .then(() => {
+        showBanner(`🗑️ Deleted image ${shortId}`);
+        loadImagesList();
+      })
+      .catch(err => {
+        showBanner(`❌ Delete failed: ${escapeHtml(String(err))}`);
+        buttonEl.disabled = false;
+        buttonEl.textContent = originalText;
+      });
+  }
+
 
   // Initialize search UI
   if (searchControl && searchToggle && searchInput) {
@@ -224,7 +410,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadContainerStats() {
-
     return cockpit.spawn(["docker", "ps", "-a", "--format", "{{.ID}}\t{{.Names}}"], { err: "message" })
       .then(output => {
         const idToName = {};
@@ -234,7 +419,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const [id, name] = line.split("\t");
           if (id && name) {
             idToName[id] = name;
-
             idToName[id.substring(0, 12)] = name;
           }
         });
@@ -249,9 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
               if (containerId && cpu) {
                 const containerName = idToName[containerId];
                 if (containerName) {
-
                   const memoryUsed = memUsage.split(' / ')[0];
-
                   containerStats[containerName] = {
                     cpu: cpu,
                     memUsage: memoryUsed,
@@ -268,7 +450,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showLogs(containerName) {
-
     let modal = document.getElementById('logs-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -348,42 +529,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startLogStream(containerName) {
     stopLogStream(); 
-
     const logsContent = document.getElementById('logs-content');
-
-    const proc = cockpit.spawn(["docker", "logs", "-f", containerName], { 
-      err: "out",  
-      pty: false 
-    });
-
+    const proc = cockpit.spawn(["docker", "logs", "-f", containerName], { err: "out", pty: false });
     logStreams[containerName] = proc;
 
     proc.stream(data => {
       const pre = logsContent.querySelector('pre');
       if (pre) {
-
         const newTextNode = document.createTextNode(data);
         pre.appendChild(newTextNode);
-
         logsContent.scrollTop = logsContent.scrollHeight;
       }
     });
 
     proc.then(() => {
-      console.log("Log stream ended normally");
       const followBtn = document.getElementById('logs-follow-btn');
       if (followBtn) {
         followBtn.textContent = '▶️ Follow';
         followBtn.classList.remove('active');
       }
     }).catch(error => {
-      console.error("Log stream error:", error);
       const followBtn = document.getElementById('logs-follow-btn');
       if (followBtn) {
         followBtn.textContent = '▶️ Follow';
         followBtn.classList.remove('active');
       }
-
       const pre = logsContent.querySelector('pre');
       if (pre) {
         const errorText = document.createTextNode(`\n\n[ERROR: Log streaming failed - ${error}]\n`);
@@ -446,8 +616,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${Math.round(mb)} MB`;
   }
 
-  function loadContainers(onDone) {
-    containerList.innerHTML = `<div class="loading">Loading containers...</div>`;
+  // loadContainers with showLoading flag (default false)
+  function loadContainers(onDone, showLoading = false) {
+    if (showLoading) {
+      containerList.innerHTML = `<div class="loading">Loading containers...</div>`;
+    }
 
     Promise.all([
       cockpit.spawn(["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Ports}}"], { err: "message" }),
@@ -485,7 +658,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="stat-value">${roundMemUsage(stats.memUsage)} (${roundStatPercent(stats.memPerc) || 'N/A'})</span>
               </div>
             </div>
-          ` : '';
+          ` : '<div class="container-stats"></div>';
 
           return `
             <div class="container-card ${isRunning ? "" : "stopped"}">
@@ -521,13 +694,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // Preserve focus across reloads
-  function reloadContainers(done) {
+  // reloadContainers with showLoading flag (default false)
+  function reloadContainers(done, showLoading = false) {
     rememberFocus();
     loadContainers(() => {
       restoreRememberedFocus();
       done?.();
-    });
+    }, showLoading);
   }
 
   function applyFilterToDOM() {
@@ -549,12 +722,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function initApp() {
     checkDockerAvailable()
       .then(() => {
-        reloadContainers();
+        // Initial load, show loading
+        reloadContainers(undefined, true);
 
         setInterval(() => {
           if (Date.now() < pauseRefreshUntil) return; // skip while typing
-          reloadContainers();
-        }, 60 * 1000);
+          // Auto-refresh (no loading message)
+          reloadContainers(undefined, false);
+        }, 15 * 1000);
       })
       .catch(() => {
         showError(`ERROR: Unable to access Docker!<br>
@@ -575,18 +750,54 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshButton.style.cursor = "not-allowed";
 
     rememberFocus();
+    // Manual refresh, show loading
     loadContainers(() => {
       restoreRememberedFocus();
       refreshButton.disabled = false;
       refreshButton.textContent = "Refresh";
       refreshButton.style.opacity = 1;
       refreshButton.style.cursor = "pointer";
-    });
+    }, true);
   });
 
   initApp();
+
+  // --- BACKGROUND STATS UPDATER (non-disruptive) ---
+  setInterval(() => {
+    if (Date.now() < pauseRefreshUntil) return;
+    if (!containerList || !containerList.querySelector('.container-card')) return;
+
+    loadContainerStats().then(() => {
+      const cards = containerList.querySelectorAll('.container-card');
+      cards.forEach(card => {
+        const name = card.querySelector('.container-name')?.textContent;
+        if (!name) return;
+        const stats = containerStats[name] || {};
+        const statDiv = card.querySelector('.container-stats');
+        const isRunning = card.classList.contains('stopped') ? false : true;
+
+        if (!statDiv || !isRunning || !stats.cpu) {
+          if (statDiv) statDiv.innerHTML = '';
+          return;
+        }
+
+        statDiv.innerHTML = `
+          <div class="stat-item">
+            <span class="stat-label">CPU:</span>
+            <span class="stat-value">${stats.cpu}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Memory:</span>
+            <span class="stat-value">${roundMemUsage(stats.memUsage)} (${stats.memPerc || 'N/A'})</span>
+          </div>
+        `;
+      });
+    });
+  }, 10000); // every 10 seconds
+
 });
 
+// --------- Terminal Panel Controls (unchanged) --------
 (function(){
   const panel   = document.getElementById('terminal-panel');
   const btn     = document.getElementById('terminal-toggle-btn');

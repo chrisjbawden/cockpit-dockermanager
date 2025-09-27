@@ -16,6 +16,7 @@
 - ✅ List, start, stop, and restart containers
 - 🔍 View container status, uptime, and exposed ports
 - 💻 In window terminal
+- 💾 Image management
 
 ## 🛠️ Installation
 
@@ -33,6 +34,12 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 ---
 
 ### Changelog
+
+#### v1.0.6
+
+- Added functionality to pin/fix header
+- Added functionality to delete images
+- Resource stats update pushed to background
 
 #### v1.0.5
 

@@ -42,6 +42,7 @@
   <div id="action-banner" style="
     display: none;
     position: fixed;
+    z-index: 1500;    
     top: 0;
     left: 0;
     width: 100%;
@@ -56,38 +57,57 @@
   ">
   </div>
 
-  <h2>Cockpit Docker Manager</h2>
-
-  
-  <div id="toolbar">
-    <div class="toolbar-left">
-    <div id="search-control" class="search-control" aria-label="Search containers by name">
-      <button id="search-toggle" class="search-toggle" type="button" aria-label="Toggle search">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+  <div class="app-header" id="app-header">
+    <div class="header-bar">
+      <h2>Cockpit Docker Manager</h2>
+      <button id="pin-btn" aria-label="Pin header">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14 2l-1 1 2 2-3 3-3-3-2 2 3 3-6 6v2h2l6-6 3 3 2-2-3-3 3-3 2 2 1-1-5-5z"/>
         </svg>
       </button>
-      <input id="search-input" class="modern-input" type="text" placeholder="Search containers..." autocomplete="off" />
     </div>
-    </div>
-    <div class="toolbar-right">
-    <button id="terminal-toggle-btn" aria-label="Toggle terminal">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6
-                 a2 2 0 0 1 2-2zm0 2v12h18V6H3zm2.5 2.5L8 12 5.5 15.5
-                 7 17l4-5-4-5-1.5 1.5zM13 17h5v-2h-5v2z"/>
-      </svg>
-    </button>
-    <button id="refresh-button" class="refresh-button">Refresh</button>
-    <div class="sort-control">
-      <label for="sort-select" class="sort-label">Sort By</label>
-      <select id="sort-select" class="modern-select">
-      <option value="name">Name (A–Z)</option>
-      <option value="uptime">Uptime (longest)</option>
-      </select>
-    </div>
+
+    <div id="toolbar">
+      <div class="toolbar-left">
+        <div id="search-control" class="search-control" aria-label="Search containers by name">
+          <button id="search-toggle" class="search-toggle" type="button" aria-label="Toggle search">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+          </button>
+          <input id="search-input" class="modern-input" type="text" placeholder="Search containers..." autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button id="image-toggle-btn" aria-label="Images toggle">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H4V8h16v8zM6 14h2v2H6v-2zm4 0h8v2h-8v-2z"/>
+          </svg>
+        </button>
+
+        <button id="terminal-toggle-btn" aria-label="Toggle terminal">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6 a2 2 0 0 1 2-2zm0 2v12h18V6H3zm2.5 2.5L8 12 5.5 15.5 7 17l4-5-4-5-1.5 1.5zM13 17h5v-2h-5v2z"/>
+          </svg>
+        </button>
+
+        <button id="refresh-button" class="refresh-button">Refresh</button>
+
+        <div class="sort-control">
+          <select id="sort-select" class="modern-select">
+            <option value="name">Name (A–Z)</option>
+            <option value="uptime">Uptime (longest)</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
+
+  <div id="header-spacer" aria-hidden="true"></div>
+
+
+
   <div id="container-list">Loading...</div>
 
 
@@ -103,7 +123,7 @@
 </div>
 
 <div id="version-stamp">
-  <a href="https://github.com/chrisjbawden/cockpit-dockermanager" style="color: white; text-decoration: none;" target="_blank">V1.0.5</a>
+  <a href="https://github.com/chrisjbawden/cockpit-dockermanager" style="color: white; text-decoration: none;" target="_blank">V1.0.6</a>
 </div>
 
 
