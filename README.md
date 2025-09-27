@@ -39,6 +39,7 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 - Added functionality to pin/fix header
 - Added functionality to delete images
+- Resource stats update pushed to background
 
 #### v1.0.5
 
