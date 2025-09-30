@@ -1,0 +1,40 @@
+# .github/workflows/create-feature-branch.yml
+name: Create feature branch from canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      feature_name:
+        description: "Name of the feature (branch will be feature/<name>)"
+        required: true
+        type: string
+
+jobs:
+  create-feature:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history needed for branch creation
+
+      - name: Create feature branch from canary
+        run: |
+          # Raw input from user
+          RAW_INPUT="${{ github.event.inputs.feature_name }}"
+
+          # Sanitise: lowercase, replace spaces and invalid chars with hyphens
+          SAFE_NAME=$(echo "$RAW_INPUT" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9._-' '-')
+
+          FEATURE_BRANCH="feature/$SAFE_NAME"
+          echo "Creating branch: $FEATURE_BRANCH"
+
+          # Ensure canary is up to date
+          git fetch origin canary
+          git checkout canary
+          git pull origin canary
+
+          # Create and push the feature branch
+          git checkout -b "$FEATURE_BRANCH"
+          git push origin "$FEATURE_BRANCH"
