@@ -19,6 +19,13 @@ jobs:
         with:
           fetch-depth: 0   # full history needed for branch creation
 
+      - name: Verify canary branch exists
+        run: |
+          if ! git ls-remote --exit-code origin canary >/dev/null 2>&1; then
+            echo "Error: 'canary' branch does not exist on remote. Exiting."
+            exit 1
+          fi
+
       - name: Create feature branch from canary
         run: |
           # Raw input from user
