@@ -4,6 +4,9 @@ name: Auto .tar dockermanager directory
 on:
   workflow_dispatch:  # allow manual run from GitHub UI
   push:
+    branches:
+      - main
+      - canary
     paths:
       - 'dockermanager/**'  # only run when dockermanager files change
 
