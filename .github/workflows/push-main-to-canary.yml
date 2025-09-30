@@ -1,24 +1,79 @@
-name: Sync Canary with Main
+# .github/workflows/merge-main-into-canary.yml
+name: Merge main into canary (PR on conflict)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}   # <-- no inputs, no branch dropdown
 
 permissions:
-  contents: write
+  contents: write          # needed to push on success
+  pull-requests: write     # needed to create PR on conflict
 
 jobs:
-  sync:
+  merge-main-into-canary:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout canary
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main   # checkout main branch
+          ref: canary
 
-      - name: Push main → canary
+      - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -B canary main
-          git push origin canary --force
+
+      - name: Fetch main
+        run: |
+          git fetch --prune origin +refs/heads/main:refs/remotes/origin/main
+
+      - id: merge
+        name: Merge origin/main into canary (fail-safe)
+        run: |
+          set -e
+          if git merge --no-ff origin/main -m "Merge main into canary"; then
+            echo "conflicted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "conflicted=true" >> "$GITHUB_OUTPUT"
+            git merge --abort || true
+          fi
+
+      - name: Push updated canary (merge succeeded)
+        if: steps.merge.outputs.conflicted == 'false'
+        run: |
+          git push origin HEAD:canary
+
+      - name: Open or update PR main → canary (merge conflicts)
+        if: steps.merge.outputs.conflicted == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: 'open', base: 'canary', head: `${owner}:main`
+            });
+
+            const title = 'Merge main into canary (conflicts to resolve)';
+            const body  = [
+              'Automated merge from **main** into **canary** detected conflicts.',
+              '',
+              '**Next steps:** Use the GitHub UI to resolve the conflicts in this PR,',
+              'then merge to update `canary`.',
+              '',
+              '_This PR was created by a workflow after a failed automatic merge._'
+            ].join('\n');
+
+            if (existing.data.length > 0) {
+              const pr = existing.data[0];
+              core.info(`Found existing PR #${pr.number}. Updating it...`);
+              await github.rest.pulls.update({ owner, repo, pull_number: pr.number, title, body });
+            } else {
+              const pr = await github.rest.pulls.create({
+                owner, repo, title, body, base: 'canary', head: 'main'
+              });
+              core.info(`Opened PR #${pr.data.number} from main -> canary`);
+            }
