@@ -13,9 +13,9 @@
 
 ## 🚀 Features
 
-- ✅ List, start, stop, and restart containers
-- 🔍 View container status, uptime, and exposed ports
-- 💻 In window terminal
+- ✅ List, start, stop, search and restart containers
+- 🔍 View container status, uptime, details and exposed ports
+- 💻 In window terminal (now with individual container terminal functionality)
 - 💾 Image management
 
 ## 🛠️ Installation
@@ -34,6 +34,12 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 ---
 
 ### Changelog
+
+#### v1.0.7
+
+- Added modal to wrap logs, details and individual container terminal functionality
+- Minor UI changes
+- Added ability to delete containers
 
 #### v1.0.6
 

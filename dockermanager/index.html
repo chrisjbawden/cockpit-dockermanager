@@ -1,3 +1,4 @@
+<!-- index.html */ -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,65 +6,22 @@
   <title>Cockpit Docker Manager</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Spinner styling (in case style.css hasn't loaded yet) */
-    #loading-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background-color: rgba(0, 0, 0, 0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .spinner {
-      border: 8px solid #f3f3f3;
-      border-top: 8px solid #3498db;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0%   { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    /* Fallback spinner if style.css hasn't loaded yet */
+    #loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .spinner{border:8px solid #f3f3f3;border-top:8px solid #3498db;border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-  <!-- Loading Spinner -->
-  <div id="loading-overlay">
-    <div class="spinner"></div>
-  </div>
+  <div id="loading-overlay"><div class="spinner"></div></div>
 
-  <!-- Action Banner -->
-  <div id="action-banner" style="
-    display: none;
-    position: fixed;
-    z-index: 1500;    
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #0e86d4;
-    opacity: 0.5;
-    color: #000;
-    padding: 10px;
-    text-align: center;
-    font-weight: bold;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  ">
-  </div>
+  <div id="action-banner" style="display:none;position:fixed;top:0;left:0;width:100%;background:#0e86d4;opacity:.5;color:#000;padding:10px;text-align:center;font-weight:bold;z-index:1000;box-shadow:0 2px 4px rgba(0,0,0,.1)"></div>
 
   <div class="app-header" id="app-header">
     <div class="header-bar">
       <h2>Cockpit Docker Manager</h2>
       <button id="pin-btn" aria-label="Pin header">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M14 2l-1 1 2 2-3 3-3-3-2 2 3 3-6 6v2h2l6-6 3 3 2-2-3-3 3-3 2 2 1-1-5-5z"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2l-1 1 2 2-3 3-3-3-2 2 3 3-6 6v2h2l6-6 3 3 2-2-3-3 3-3 2 2 1-1-5-5z"/></svg>
       </button>
     </div>
 
@@ -81,15 +39,11 @@
 
       <div class="toolbar-right">
         <button id="image-toggle-btn" aria-label="Images toggle">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H4V8h16v8zM6 14h2v2H6v-2zm4 0h8v2h-8v-2z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H4V8h16v8zM6 14h2v2H6v-2zm4 0h8v2h-8v-2z"/></svg>
         </button>
 
         <button id="terminal-toggle-btn" aria-label="Toggle terminal">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6 a2 2 0 0 1 2-2zm0 2v12h18V6H3zm2.5 2.5L8 12 5.5 15.5 7 17l4-5-4-5-1.5 1.5zM13 17h5v-2h-5v2z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6 a2 2 0 0 1 2-2zm0 2v12h18V6H3zm2.5 2.5L8 12 5.5 15.5 7 17l4-5-4-5-1.5 1.5zM13 17h5v-2h-5v2z"/></svg>
         </button>
 
         <button id="refresh-button" class="refresh-button">Refresh</button>
@@ -106,31 +60,74 @@
 
   <div id="header-spacer" aria-hidden="true"></div>
 
-
-
   <div id="container-list">Loading...</div>
 
+  <!-- Manage Modal -->
+  <div id="manage-modal" class="logs-modal" style="display:none;">
+    <div class="logs-modal-content">
+      <div class="logs-modal-header">
+        <h3><span id="manage-title-prefix">Manage:</span> <span id="manage-container-name"></span></h3>
+        <div class="logs-controls"><button id="manage-close-btn" class="logs-btn">✖️ Close</button></div>
+      </div>
 
-<!-- =Cockpit Terminal Section -->
+      <!-- Tabs row with delete button pushed to the right -->
+      <div class="tabs">
+        <div class="tabs-left">
+          <button class="tab-btn active" data-tab="tab-logs">Logs</button>
+          <button class="tab-btn" data-tab="tab-terminal">Terminal</button>
+          <button class="tab-btn" data-tab="tab-details">Details</button>
+        </div>
+        <div class="tabs-right">
+          <button id="container-delete-btn" class="logs-btn danger" title="Delete container">🗑️ Delete</button>
+        </div>
+      </div>
 
+      <div class="tab-panels">
+        <section id="tab-logs" class="tab-panel active">
+          <div class="logs-controls" style="padding:10px 16px;">
+            <button id="tablogs-follow-btn" class="logs-btn active">⏸️ Stop</button>
+            <button id="tablogs-clear-btn" class="logs-btn">🗑️ Clear</button>
+          </div>
+          <div id="tablogs-content" class="logs-content"><div class="loading">Loading logs…</div></div>
+        </section>
 
-<!-- panel -->
-<div id="terminal-panel">
-  <div id="terminal-resizer"></div>
-  <!-- ✱✱✱  UPDATE src BELOW to your Cockpit terminal URL/path  ✱✱✱ -->
-  <iframe id="terminal-iframe"
-          src="/cockpit/@localhost/system/terminal.html"></iframe>
-</div>
+        <section id="tab-terminal" class="tab-panel">
+          <div class="terminal-toolbar">
+            <label for="shell-select">Shell:</label>
+            <select id="shell-select" class="modern-select" style="width:auto;">
+              <option value="/bin/bash">/bin/bash</option>
+              <option value="/bin/sh">/bin/sh</option>
+            </select>
+            <button id="open-terminal-btn" class="logs-btn" type="button">Open terminal</button>
+          </div>
+          <div id="modal-terminal" class="modal-terminal">
+            <pre id="modal-terminal-output" class="modal-terminal-output"></pre>
+            <div class="modal-terminal-inputbar">
+              <span class="prompt">$</span>
+              <input id="modal-terminal-input" type="text" placeholder="Type a command and press Enter…" autocomplete="off" disabled>
+            </div>
+          </div>
+          <div class="terminal-tip">Tip: Press Enter to send, Ctrl+C to interrupt the running process.</div>
+        </section>
 
-<div id="version-stamp">
-  <a href="https://github.com/chrisjbawden/cockpit-dockermanager" style="color: white; text-decoration: none;" target="_blank">V1.0.6</a>
-</div>
+        <section id="tab-details" class="tab-panel">
+          <div id="details-content" class="logs-content"><div class="loading">Loading details…</div></div>
+        </section>
+      </div>
+    </div>
+  </div>
 
+  <!-- Bottom terminal panel  -->
+  <div id="terminal-panel">
+    <div id="terminal-resizer"></div>
+    <iframe id="terminal-iframe" src="/cockpit/@localhost/system/terminal.html"></iframe>
+  </div>
 
-<!--  End Cockpit Terminal Section -->
+  <div id="version-stamp">
+    <a href="https://github.com/chrisjbawden/cockpit-dockermanager" style="color:#fff;text-decoration:none" target="_blank">V1.0.7</a>
+  </div>
 
-
-<script src="../base1/cockpit.js"></script>
-<script src="app.js"></script>
+  <script src="../base1/cockpit.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
