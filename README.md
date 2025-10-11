@@ -38,8 +38,6 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 #### v1.0.7
 
 - Added modal to wrap logs, details and individual container terminal functionality
-- Added individual terminal functionality
-- Added container details
 - Minor UI changes
 - Added ability to delete containers
 
