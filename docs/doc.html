@@ -79,11 +79,10 @@
           <ul>
             <li>Start, stop, and restart Docker containers via the UI</li>
             <li>View container logs</li>
-            <li>Access to host's terminal in the same window</li>
+            <li>Access to host's and container terminal</li>
             <li>CPU and RAM usage stats (auto-refresh every 15seconds)</li>
             <li>Search containers by name</li>
             <li>Sort containers by name or uptime </li>
-            <li>No support for removing containers (by design)</li>
           </ul>
           <!-- TODO: Add more feature details or screenshots as needed -->
         </section>
@@ -92,7 +91,7 @@
         <section class="js-section">
           <h3 class="section__title">FAQ</h3>
           <ul>
-            <li><b>Q: I can't see any containers or stats?</b><br>
+            <li><b>Q: I can't see any containers or getting and error?</b><br>
               A: Make sure your user is in the <code>docker</code> group, and that Docker is running.
             </li>
             <br>
@@ -100,11 +99,7 @@
               A: This app is intentionally minimal and does not support removal to prevent accidental loss.
             </li>
             <br>
-            <li><b>Q: Does this app let me access container terminals?</b><br>
-              A: No, only host-level terminal access is provided at this point. You will need to attach it via the host terminal.
-            </li>
-            <br>
-            <li><b>Q: How do I update?</b><br>
+            <li><b>Q: How do I handle systematic update?</b><br>
               A: You could explore a cron solution, ie; <br>
               <br>
               <code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code>
