@@ -251,24 +251,78 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadContainerStats(){
-    return cockpit.spawn(["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"],{err:"message"})
-      .then(out=>{
-        const id2name={}; out.trim().split("\n").forEach(line=>{ if(!line) return; const [id,name]=line.split("\t"); if(id&&name){ id2name[id]=name; id2name[id.substring(0,12)]=name; } });
-        return cockpit.spawn(["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"],{err:"message"})
-          .then(stats=>{
-            containerStats={};
-            stats.trim().split("\n").forEach(line=>{
-              if(!line) return;
-              const [cid,cpu,memUsage,memPerc]=line.split("\t");
-              const name=id2name[cid];
-              if(name){
-                const used=(memUsage||'').split(' / ')[0];
-                containerStats[name]={cpu,memUsage:used,memPerc};
-              }
-            });
-          });
-      })
-      .catch(()=>{ containerStats={}; });
+    return cockpit.spawn(
+      ["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"],
+      { err:"message" }
+    )
+    .then(out => {
+      const id2name = {};
+      (out.trim() ? out.trim().split("\n") : []).forEach(line => {
+        if (!line) return;
+        const [id, nameRaw] = line.split("\t");
+        if (!id || !nameRaw) return;
+
+        const trimmedName = nameRaw.trim();
+        if (!trimmedName) return;
+
+        // This is the name used in the UI ({{.Names}})
+        const displayName = trimmedName;
+
+        // Map full ID and short ID → display name
+        id2name[id] = displayName;
+        if (id.length >= 12) id2name[id.substring(0, 12)] = displayName;
+
+        // Docker's .Names can technically contain multiple names (comma-separated)
+        // and sometimes stats may use a variant with a leading "/".
+        trimmedName.split(",").forEach(part => {
+          const nm = part.trim();
+          if (!nm) return;
+          const clean = nm.replace(/^\//, "");
+
+          // Both the raw and "clean" variant map back to the same displayName.
+          id2name[nm] = displayName;
+          if (clean && clean !== nm) id2name[clean] = displayName;
+        });
+      });
+
+      return cockpit.spawn(
+        ["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"],
+        { err:"message" }
+      )
+      .then(stats => {
+        containerStats = {};
+        (stats.trim() ? stats.trim().split("\n") : []).forEach(line => {
+          if (!line) return;
+          const [cidRaw, cpu, memUsage, memPerc] = line.split("\t");
+          if (!cidRaw) return;
+
+          const cid = cidRaw.trim();
+          if (!cid) return;
+
+          // Try direct match first (ID, short ID, name, /name, etc.)
+          let name = id2name[cid];
+
+          if (!name) {
+            // Try stripping leading slash and truncation as a fallback
+            const clean = cid.replace(/^\//, "");
+            name = id2name[clean]
+                || id2name[clean.substring(0, 12)]
+                || id2name[cid.substring(0, 12)];
+          }
+
+          // If we still don't have a match, skip: we only store stats
+          // when we can reliably map back to a container name that
+          // exists in the main list.
+          if (!name) return;
+
+          const used = (memUsage || '').split(' / ')[0];
+          containerStats[name] = { cpu, memUsage: used, memPerc };
+        });
+      });
+    })
+    .catch(() => {
+      containerStats = {};
+    });
   }
 
   // -------------- Manage modal (Logs / Terminal / Details + Delete) --------------
