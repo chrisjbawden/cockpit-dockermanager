@@ -9,6 +9,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   create-feature:
     runs-on: ubuntu-latest
@@ -19,21 +22,36 @@ jobs:
         with:
           fetch-depth: 0   # full history needed for branch creation
 
+      - name: Verify 'canary' branch exists on remote
+        run: |
+          if ! git ls-remote --exit-code origin canary >/dev/null 2>&1; then
+            echo "Error: 'canary' branch does not exist on remote. Exiting."
+            exit 1
+          fi
+
       - name: Create feature branch from canary
         run: |
           # Raw input from user
           RAW_INPUT="${{ github.event.inputs.feature_name }}"
 
-          # Sanitise: lowercase, replace spaces and invalid chars with hyphens
-          SAFE_NAME=$(echo "$RAW_INPUT" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9._-' '-')
+          # Sanitise: lowercase, collapse invalid chars to '-', then trim leading/trailing '-'
+          SAFE_NAME=$(echo "$RAW_INPUT" \
+            | tr '[:upper:]' '[:lower:]' \
+            | tr -cs 'a-z0-9._-' '-' \
+            | sed 's/^-*//; s/-*$//')
+
+          if [ -z "$SAFE_NAME" ]; then
+            echo "Error: feature name becomes empty after sanitisation. Please use letters/numbers/dot/underscore/hyphen."
+            exit 1
+          fi
 
           FEATURE_BRANCH="feature/$SAFE_NAME"
           echo "Creating branch: $FEATURE_BRANCH"
 
-          # Ensure canary is up to date
+          # Ensure local canary is up to date
           git fetch origin canary
-          git checkout canary
-          git pull origin canary
+          git checkout -B canary origin/canary
+          git pull --ff-only origin canary
 
           # Create and push the feature branch
           git checkout -b "$FEATURE_BRANCH"
