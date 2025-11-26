@@ -35,6 +35,9 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 ### Changelog
 
+#### v1.0.X
+- Fix for stats
+
 #### v1.0.7
 
 - Added modal to wrap logs, details and individual container terminal functionality
@@ -54,10 +57,6 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 - Fixed terminal button
 - Modified refresh interval to 3mins
 
-#### v1.0.4
-
-- Added Real time log, CPU/memory monitoring
-
-#### v1.0.3
-
-- In window terminal functionality implemented
+<div align="center">
+  <a href="https://chrisjbawden.github.io/cockpit-dockermanager/" target="_blank" rel="noopener noreferrer">...</a>
+</div>
