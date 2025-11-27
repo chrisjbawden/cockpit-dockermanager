@@ -37,6 +37,8 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 #### v1.0.X
 - Fix for stats
+- Banner converted to toast notification
+- bugfix for prunning button
 
 #### v1.0.7
 
