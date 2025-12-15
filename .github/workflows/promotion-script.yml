@@ -1,0 +1,40 @@
+name: Create filtered promotion branch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  filter-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Fail if branch already exists
+        run: |
+          if git ls-remote --exit-code --heads origin promote-from-canary; then
+            echo "Branch promote-from-canary already exists. Delete it first."
+            exit 1
+          fi
+
+      - name: Create filtered branch from canary
+        run: |
+          git fetch origin main
+          git checkout canary
+          git checkout -b promote-from-canary
+
+          git checkout origin/main -- \
+            docs/dist \
+            .github/workflows \
+            LICENSE \
+            dockermanager.tar
+
+          git commit -m "Create promotion branch excluding selected paths"
+          git push origin promote-from-canary
