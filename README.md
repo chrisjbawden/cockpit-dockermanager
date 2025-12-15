@@ -60,5 +60,5 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 - Modified refresh interval to 3mins
 
 <div align="center">
-  <a href="https://chrisjbawden.github.io/cockpit-dockermanager/" target="_blank" rel="noopener noreferrer">...</a>
+  <a href="https://chrisjbawden.github.io/cockpit-dockermanager/index.html" target="_blank" rel="noopener noreferrer">...</a>
 </div>
