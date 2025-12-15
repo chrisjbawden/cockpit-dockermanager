@@ -31,7 +31,7 @@ jobs:
           git checkout -b promote-from-canary
 
           git checkout origin/main -- \
-            docs/dist \
+            docs/dists \
             .github/workflows \
             LICENSE \
             dockermanager.tar
