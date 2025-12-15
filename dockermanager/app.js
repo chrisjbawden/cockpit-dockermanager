@@ -97,12 +97,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const pruneBtn = document.getElementById("images-prune-btn");
       pruneBtn.addEventListener("click", () => {
         const content = document.getElementById("images-content");
-        const prev = pruneBtn.textContent; pruneBtn.disabled=true; pruneBtn.classList.add("loading"); pruneBtn.textContent="Pruning…";
-        const old = content.innerHTML; content.innerHTML = `<div class="loading">Pruning dangling images…</div>`;
-        cockpit.spawn(["docker","image","prune","-f"],{err:"message"})
+        const prev = pruneBtn.textContent;
+
+        pruneBtn.disabled = true;
+        pruneBtn.classList.add("running");
+        pruneBtn.textContent = "Pruning...";
+
+        const old = content.innerHTML;
+        content.innerHTML = `<div class="loading">Pruning dangling images…</div>`;
+
+        const start = Date.now();
+
+        cockpit.spawn(["docker", "image", "prune", "-f"], { err: "message" })
           .then(loadImagesList)
-          .catch(err=>{ showBanner(`❌ Prune failed: ${escapeHtml(String(err))}`); content.innerHTML = old; })
-          .finally(()=>{ pruneBtn.disabled=false; pruneBtn.classList.remove("loading"); pruneBtn.textContent=prev; });
+          .catch(err => {
+            showBanner(`❌ Prune failed: ${escapeHtml(String(err))}`);
+            content.innerHTML = old;
+          })
+          .finally(() => {
+            const elapsed = Date.now() - start;
+            const minTime = 1500; // 1.5 seconds
+
+            const remaining = Math.max(0, minTime - elapsed);
+            setTimeout(() => {
+              pruneBtn.disabled = false;
+              pruneBtn.classList.remove("running");
+              pruneBtn.textContent = prev;
+            }, remaining);
+          });
       });
       modal.addEventListener("click", e => { if (e.target === modal) modal.style.display="none"; });
     }
@@ -211,7 +233,69 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- helpers ---
-  function showBanner(msg){ if(!actionBanner) return; actionBanner.textContent=msg; actionBanner.style.display="block"; setTimeout(()=>actionBanner.style.display="none", 5000); }
+  function showBanner(msg, options) {
+    const opts = options || {};
+
+    // Decide variant (info/success/error) from either options or message text
+    let variant = opts.variant || "info";
+    if (!opts.variant) {
+      if (/❌|failed|error/i.test(msg)) variant = "error";
+      else if (/deleted|success|started|stopped|restarted/i.test(msg)) variant = "success";
+    }
+
+    const timeout = typeof opts.timeout === "number" ? opts.timeout : 5000;
+    const title = opts.title || msg;        // title line
+    const body  = opts.title ? msg : "";    // body line only if a separate title was provided
+
+    // Ensure container exists
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      document.body.appendChild(container);
+    }
+
+    // Build toast element
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${variant}`;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+
+    const iconChar =
+      variant === "success" ? "✔️" :
+      variant === "error"   ? "❌" : "ℹ️";
+
+    toast.innerHTML = `
+      <div class="toast-icon">${iconChar}</div>
+      <div class="toast-content">
+        <p class="toast-title">${escapeHtml(String(title))}</p>
+        ${body ? `<p class="toast-body">${escapeHtml(String(body))}</p>` : ""}
+        <div class="toast-time">${escapeHtml(timeStr)}</div>
+      </div>
+      <button class="toast-close" aria-label="Dismiss notification">×</button>
+    `;
+
+    function closeToast() {
+      if (!toast.parentNode) return;
+      toast.classList.add("toast-hide");
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 150);
+    }
+
+    toast.querySelector(".toast-close").addEventListener("click", closeToast);
+
+    container.appendChild(toast);
+
+    if (timeout > 0) {
+      setTimeout(closeToast, timeout);
+    }
+  }
+
+  function hideLoading(){ if(loadingOverlay) loadingOverlay.style.display="none"; }
+  function showError(msg){ containerList.innerHTML = `<div class="error">${msg}</div>`; }
+
   function hideLoading(){ if(loadingOverlay) loadingOverlay.style.display="none"; }
   function showError(msg){ containerList.innerHTML = `<div class="error">${msg}</div>`; }
 
@@ -251,24 +335,78 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadContainerStats(){
-    return cockpit.spawn(["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"],{err:"message"})
-      .then(out=>{
-        const id2name={}; out.trim().split("\n").forEach(line=>{ if(!line) return; const [id,name]=line.split("\t"); if(id&&name){ id2name[id]=name; id2name[id.substring(0,12)]=name; } });
-        return cockpit.spawn(["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"],{err:"message"})
-          .then(stats=>{
-            containerStats={};
-            stats.trim().split("\n").forEach(line=>{
-              if(!line) return;
-              const [cid,cpu,memUsage,memPerc]=line.split("\t");
-              const name=id2name[cid];
-              if(name){
-                const used=(memUsage||'').split(' / ')[0];
-                containerStats[name]={cpu,memUsage:used,memPerc};
-              }
-            });
-          });
-      })
-      .catch(()=>{ containerStats={}; });
+    return cockpit.spawn(
+      ["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"],
+      { err:"message" }
+    )
+    .then(out => {
+      const id2name = {};
+      (out.trim() ? out.trim().split("\n") : []).forEach(line => {
+        if (!line) return;
+        const [id, nameRaw] = line.split("\t");
+        if (!id || !nameRaw) return;
+
+        const trimmedName = nameRaw.trim();
+        if (!trimmedName) return;
+
+        // This is the name used in the UI ({{.Names}})
+        const displayName = trimmedName;
+
+        // Map full ID and short ID → display name
+        id2name[id] = displayName;
+        if (id.length >= 12) id2name[id.substring(0, 12)] = displayName;
+
+        // Docker's .Names can technically contain multiple names (comma-separated)
+        // and sometimes stats may use a variant with a leading "/".
+        trimmedName.split(",").forEach(part => {
+          const nm = part.trim();
+          if (!nm) return;
+          const clean = nm.replace(/^\//, "");
+
+          // Both the raw and "clean" variant map back to the same displayName.
+          id2name[nm] = displayName;
+          if (clean && clean !== nm) id2name[clean] = displayName;
+        });
+      });
+
+      return cockpit.spawn(
+        ["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"],
+        { err:"message" }
+      )
+      .then(stats => {
+        containerStats = {};
+        (stats.trim() ? stats.trim().split("\n") : []).forEach(line => {
+          if (!line) return;
+          const [cidRaw, cpu, memUsage, memPerc] = line.split("\t");
+          if (!cidRaw) return;
+
+          const cid = cidRaw.trim();
+          if (!cid) return;
+
+          // Try direct match first (ID, short ID, name, /name, etc.)
+          let name = id2name[cid];
+
+          if (!name) {
+            // Try stripping leading slash and truncation as a fallback
+            const clean = cid.replace(/^\//, "");
+            name = id2name[clean]
+                || id2name[clean.substring(0, 12)]
+                || id2name[cid.substring(0, 12)];
+          }
+
+          // If we still don't have a match, skip: we only store stats
+          // when we can reliably map back to a container name that
+          // exists in the main list.
+          if (!name) return;
+
+          const used = (memUsage || '').split(' / ')[0];
+          containerStats[name] = { cpu, memUsage: used, memPerc };
+        });
+      });
+    })
+    .catch(() => {
+      containerStats = {};
+    });
   }
 
   // -------------- Manage modal (Logs / Terminal / Details + Delete) --------------
