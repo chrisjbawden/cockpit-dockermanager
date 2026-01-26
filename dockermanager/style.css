@@ -169,6 +169,16 @@ header {
   border-left-color: #ff4c4c;
   color: #ffcccc;
 }
+.error-detail {
+  margin-top: 10px;
+  padding: 10px;
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #ffd6d6;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+}
 
 /* ================================
    Header & Pin Behaviour
@@ -462,6 +472,10 @@ select::-ms-expand {
 }
 .tabs-right {
   margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 .tab-btn {
   background: #333;
