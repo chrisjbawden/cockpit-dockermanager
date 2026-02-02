@@ -20,9 +20,9 @@
 
 ## 🛠️ Installation
 
-### Ubuntu:
+### Ubuntu/DEB:
 
-<div style="margin-left: 20%">
+<div style="padding-left: 20%">
   
 **Automatic (recommended)**
 ```shell
