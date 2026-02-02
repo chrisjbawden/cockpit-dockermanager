@@ -53,11 +53,14 @@ EOF
 sudo yum install -y dockermanager
 ```
 
-**Manual**
+<details>
+  <summary><strong>Manual</strong></summary>
+
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash
 ```
+</details>
 
 ---
 
@@ -84,13 +87,6 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 - Added functionality to pin/fix header
 - Added functionality to delete images
 - Resource stats update pushed to background
-
-#### v1.0.5
-
-- Added "sort-by" functionality
-- Added search functionality
-- Fixed terminal button
-- Modified refresh interval to 3mins
 
 <div align="center">
   <a href="https://chrisjbawden.github.io/cockpit-dockermanager/index.html" target="_blank" rel="noopener noreferrer">...</a>
