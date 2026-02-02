@@ -22,7 +22,8 @@
 
 ### Ubuntu/DEB:
 
-<div style="padding-left: 20%">
+<dl>
+  <dd>
   
 **Automatic (recommended)**
 ```shell
@@ -40,8 +41,9 @@ curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanag
 ```
 </details>
 
-</div>
 
+  <dd>
+<dl>
 ### Fedora/RHEL:
 
 **Automatic (recommended)**
