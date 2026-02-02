@@ -22,10 +22,38 @@
 
 ### Ubuntu:
 
+
+**Automatic (recommended)**
+```shell
+echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
+  | sudo tee /etc/apt/sources.list.d/cockpit-dockermanager.list
+
+sudo apt update
+sudo apt install dockermanager
+```
+**Manual**
+
 ```shell
 curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb
 ```
 ### Fedora/RHEL:
+
+**Automatic (recommended)**
+
+```shell
+sudo tee /etc/yum.repos.d/cockpit-dockermanager.repo <<'EOF'
+[cockpit-dockermanager]
+name=Cockpit Docker Manager
+baseurl=https://chrisjbawden.github.io/cockpit-dockermanager/yum/stable/
+enabled=1
+gpgcheck=0
+metadata_expire=0
+EOF
+
+sudo yum install -y dockermanager
+```
+
+**Manual**
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash
