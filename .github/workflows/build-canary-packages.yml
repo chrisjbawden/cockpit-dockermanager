@@ -94,6 +94,8 @@ jobs:
           VERSION: ${{ github.event.inputs.version }}
         run: |
           mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp -rT dockermanager rpmbuild/SOURCES/dockermanager
+          cp LICENSE rpmbuild/SOURCES/LICENSE
 
           cat > rpmbuild/SPECS/dockermanager-canary.spec <<EOF
           Name:           dockermanager-canary
@@ -103,7 +105,7 @@ jobs:
           License:        MIT
           BuildArch:      noarch
           Conflicts:      dockermanager
-          Obsoletes:      dockermanager
+          Obsoletes:      dockermanager < %{version}
 
           %description
           Canary channel with latest changes for testing.
@@ -115,10 +117,10 @@ jobs:
           %install
           rm -rf %{buildroot}
           mkdir -p %{buildroot}/usr/share/cockpit/dockermanager
-          cp -rT dockermanager %{buildroot}/usr/share/cockpit/dockermanager
+          cp -rT %{_sourcedir}/dockermanager %{buildroot}/usr/share/cockpit/dockermanager
 
           %files
-          %license LICENSE
+          %license %{_sourcedir}/LICENSE
           %dir /usr/share/cockpit
           /usr/share/cockpit/dockermanager
           EOF
