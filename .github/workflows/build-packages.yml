@@ -1,0 +1,188 @@
+name: Build Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version (e.g. 1.0.1)"
+        required: true
+        default: "1.0.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      PKG_NAME: dockermanager      # package name inside control file
+      BUILD_DIR: build             # temporary folder for packaging tree
+
+    steps:
+    # --------------------------------------------------------------
+    # 1. Check out source with full history and tags so we can move tags
+    # --------------------------------------------------------------
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: true
+
+    # --------------------------------------------------------------
+    # 2. Lay out packaging tree in $BUILD_DIR
+    # --------------------------------------------------------------
+    - name: Prepare packaging structure
+      run: |
+        rm -rf "$BUILD_DIR"                    # ensure a clean slate
+        mkdir -p "$BUILD_DIR/DEBIAN"
+        mkdir -p "$BUILD_DIR/usr/share/cockpit/$PKG_NAME"
+
+        # Copy project files into the payload (recursively, incl. dot-files)
+        cp -rT "$PKG_NAME" \
+              "$BUILD_DIR/usr/share/cockpit/$PKG_NAME"
+
+    # --------------------------------------------------------------
+    # 3. Generate control file with version input
+    # --------------------------------------------------------------
+    - name: Generate control file
+      env:
+        VERSION: ${{ github.event.inputs.version }}
+      run: |
+        printf '%s\n' \
+          "Package: $PKG_NAME" \
+          "Version: $VERSION" \
+          "Section: admin" \
+          "Priority: optional" \
+          "Architecture: all" \
+          "Maintainer: Chris Bawden <chrisjbawden@outlook.com>" \
+          "Description: Cockpit plugin – Docker Manager UI" \
+          > "$BUILD_DIR/DEBIAN/control"
+
+        chmod 0755 "$BUILD_DIR/DEBIAN"
+        chmod 0644 "$BUILD_DIR/DEBIAN/control"
+
+    # --------------------------------------------------------------
+    # 4. Build the package and create the two artefacts
+    # --------------------------------------------------------------
+    - name: Build DEB
+      env:
+        VERSION: ${{ github.event.inputs.version }}
+      run: |
+        dpkg-deb --build --root-owner-group "$BUILD_DIR" \
+                 "${PKG_NAME}_${VERSION}_all.deb"
+
+        cp "${PKG_NAME}_${VERSION}_all.deb" "${PKG_NAME}-${VERSION}.deb"
+        cp "${PKG_NAME}_${VERSION}_all.deb" "${PKG_NAME}.deb"
+
+    # --------------------------------------------------------------
+    # 4b. Build the RPM package (RHEL/Fedora)
+    # --------------------------------------------------------------
+    - name: Install RPM build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y rpm
+
+    - name: Build RPM
+      env:
+        VERSION: ${{ github.event.inputs.version }}
+      run: |
+        mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        cp -rT "$PKG_NAME" rpmbuild/SOURCES/"$PKG_NAME"
+        cp LICENSE rpmbuild/SOURCES/LICENSE
+
+        cat > rpmbuild/SPECS/dockermanager.spec <<EOF
+        Name:           dockermanager
+        Version:        $VERSION
+        Release:        1%{?dist}
+        Summary:        Cockpit plugin – Docker Manager UI
+        License:        MIT
+        BuildArch:      noarch
+
+        %description
+        Cockpit plugin for managing Docker containers.
+
+        %prep
+
+        %build
+
+        %install
+        rm -rf %{buildroot}
+        mkdir -p %{buildroot}/usr/share/cockpit/dockermanager
+        cp -rT %{_sourcedir}/dockermanager %{buildroot}/usr/share/cockpit/dockermanager
+        mkdir -p %{buildroot}/usr/share/licenses/%{name}
+        cp %{_sourcedir}/LICENSE %{buildroot}/usr/share/licenses/%{name}/LICENSE
+
+        %files
+        %license /usr/share/licenses/%{name}/LICENSE
+        %dir /usr/share/cockpit
+        /usr/share/cockpit/dockermanager
+        EOF
+
+        rpmbuild -bb rpmbuild/SPECS/dockermanager.spec \
+          --define "_topdir $PWD/rpmbuild"
+
+        RPM_PATH=$(ls rpmbuild/RPMS/noarch/dockermanager-"$VERSION"-1*.rpm | head -n 1)
+        cp "$RPM_PATH" "dockermanager-${VERSION}.rpm"
+        cp "$RPM_PATH" "dockermanager.rpm"
+
+    # --------------------------------------------------------------
+    # 5a. Move (delete/re-create) the version tag to current commit
+    # --------------------------------------------------------------
+    - name: Move version tag to current commit
+      env:
+        VERSION: ${{ github.event.inputs.version }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git fetch origin
+        git tag -d "v$VERSION" || true
+        git push origin :refs/tags/v$VERSION || true
+        git tag "v$VERSION"
+        git push origin "v$VERSION" --force
+
+    # --------------------------------------------------------------
+    # 5b. Move (delete/re-create) the 'latest' tag to current commit
+    # --------------------------------------------------------------
+    - name: Move 'latest' tag to current commit
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git fetch origin
+        git tag -d latest || true
+        git push origin :refs/tags/latest || true
+        git tag latest
+        git push origin latest --force
+
+    # --------------------------------------------------------------
+    # 6a. Create/Update versioned Release and upload versioned .deb
+    # --------------------------------------------------------------
+    - name: Create/Update versioned Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ github.event.inputs.version }}
+        name: "DockerManager v${{ github.event.inputs.version }}"
+        body: |
+          Automated release for DockerManager v${{ github.event.inputs.version }}.
+        draft: false
+        prerelease: false
+        files: |
+          dockermanager-${{ github.event.inputs.version }}.deb
+          dockermanager-${{ github.event.inputs.version }}.rpm
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # --------------------------------------------------------------
+    # 6b. Create/Update 'latest' Release and upload latest .deb
+    # --------------------------------------------------------------
+    - name: Create/Update latest Release (rolling download)
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: "DockerManager Latest"
+        body: |
+          Rolling release. This always contains the most recent dockermanager.deb.
+        draft: false
+        prerelease: false
+        files: |
+          dockermanager.deb
+          dockermanager.rpm
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
