@@ -118,9 +118,11 @@ jobs:
           rm -rf %{buildroot}
           mkdir -p %{buildroot}/usr/share/cockpit/dockermanager
           cp -rT %{_sourcedir}/dockermanager %{buildroot}/usr/share/cockpit/dockermanager
+          mkdir -p %{buildroot}/usr/share/licenses/%{name}
+          cp %{_sourcedir}/LICENSE %{buildroot}/usr/share/licenses/%{name}/LICENSE
 
           %files
-          %license %{_sourcedir}/LICENSE
+          %license /usr/share/licenses/%{name}/LICENSE
           %dir /usr/share/cockpit
           /usr/share/cockpit/dockermanager
           EOF
