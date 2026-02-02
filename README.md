@@ -42,9 +42,9 @@ sudo apt install dockermanager
 curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb
 ```
 </details>
-
-    </dd>
-    </dd>
+  
+  </dd>
+  </dd>
   </dd>
 <dl>
   
