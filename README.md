@@ -22,7 +22,7 @@
 
 ### Ubuntu:
 
-<div style="width: 80%, margin-left: auto, margin-right: auto" >
+<span style="width: 80%, margin-left: auto, margin-right: auto" >
 **Automatic (recommended)**
 ```shell
 echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
@@ -39,7 +39,7 @@ curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanag
 ```
 </details>
 
-</div>
+</span>
 
 ### Fedora/RHEL:
 
