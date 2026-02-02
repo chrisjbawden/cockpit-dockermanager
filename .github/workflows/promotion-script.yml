@@ -32,6 +32,7 @@ jobs:
 
           git checkout origin/main -- \
             docs/dists \
+            docs/yum \
             .github/workflows \
             LICENSE \
             dockermanager.tar
