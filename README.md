@@ -38,7 +38,7 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 #### v1.0.7.3
 - Bugfix - start/stop buttons in container dialog/pane
 - Bugfix - toast notification styling
-- Change to general error, includes cli std output for torubleshooting
+- Change to error handling - includes cli std output for torubleshooting
 
 #### v1.0.7.2
 - Bugfix - stats
