@@ -22,7 +22,7 @@
 
 ### Ubuntu:
 
-<span style="width: 80%">
+<span style="margin-left: 20%">
   
 **Automatic (recommended)**
 ```shell
