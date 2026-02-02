@@ -26,6 +26,8 @@
   <dd>
    <dd>
     <dd>
+       <dd>
+    <dd>
   
 **Automatic (recommended)**
 ```shell
@@ -44,11 +46,20 @@ curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanag
 </details>
   
   </dd>
+    </dd>
+      </dd>
   </dd>
   </dd>
 <dl>
   
 ### Fedora/RHEL:
+
+<dl>
+  <dd>
+   <dd>
+    <dd>
+       <dd>
+    <dd>
 
 **Automatic (recommended)**
 
@@ -73,6 +84,13 @@ sudo yum install -y dockermanager
 curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash
 ```
 </details>
+
+  </dd>
+    </dd>
+      </dd>
+  </dd>
+  </dd>
+<dl>
 
 ---
 
