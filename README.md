@@ -25,6 +25,7 @@
 <dl>
   <dd>
    <dd>
+    <dd>
   
 **Automatic (recommended)**
 ```shell
@@ -42,6 +43,7 @@ curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanag
 ```
 </details>
 
+    </dd>
     </dd>
   </dd>
 <dl>
