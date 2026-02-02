@@ -22,7 +22,8 @@
 
 ### Ubuntu:
 
-<span style="width: 80%, margin-left: auto, margin-right: auto" >
+<span style="width: 80%">
+  
 **Automatic (recommended)**
 ```shell
 echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
