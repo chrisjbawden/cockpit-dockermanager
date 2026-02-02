@@ -22,7 +22,7 @@
 
 ### Ubuntu:
 
-
+<div style="width: 80%, margin-left: auto, margin-right: auto" >
 **Automatic (recommended)**
 ```shell
 echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
@@ -31,11 +31,16 @@ echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager sta
 sudo apt update
 sudo apt install dockermanager
 ```
-**Manual**
+<details>
+  <summary><strong>Manual</strong></summary>
 
 ```shell
 curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb
 ```
+</details>
+
+</div>
+
 ### Fedora/RHEL:
 
 **Automatic (recommended)**
