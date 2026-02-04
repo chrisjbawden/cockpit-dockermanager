@@ -100,6 +100,7 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 - Bugfix - start/stop buttons in container dialog/pane
 - Bugfix - toast notification styling
 - Change to error handling - includes cli std output for torubleshooting
+- 'Auto Prune' adjusted to remove all unused images (instead of only dangling)
 
 #### v1.0.7.2
 - Bugfix - stats
