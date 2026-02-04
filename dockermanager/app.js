@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
         pruneBtn.textContent = "Pruning...";
 
         const old = content.innerHTML;
-        content.innerHTML = `<div class="loading">Pruning dangling images…</div>`;
+        content.innerHTML = `<div class="loading">Pruning unused images…</div>`;
 
         const start = Date.now();
 
