@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const start = Date.now();
 
-        cockpit.spawn(["docker", "image", "prune", "-f"], { err: "message" })
+        cockpit.spawn(["docker", "image", "prune", "-a", "-f"], { err: "message" })
           .then(loadImagesList)
           .catch(err => {
             showBanner(`❌ Prune failed: ${escapeHtml(String(err))}`);
