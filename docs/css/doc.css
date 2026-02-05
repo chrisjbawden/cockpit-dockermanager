@@ -1,3 +1,19 @@
+pre {
+  background: #f6f8fa;
+  padding: 12px 14px;
+  margin: 12px 0;
+  overflow-x: auto;
+  white-space: pre;
+  border-radius: 6px;
+}
+
+pre code {
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: block;
+}
+
 html, body {
   display: flex;
   flex-direction: column;
