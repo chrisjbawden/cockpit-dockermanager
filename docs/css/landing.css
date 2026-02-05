@@ -1,31 +1,11 @@
 /* nav specialized to landing page */
-.changelog-more{
-  display: flex;
-  justify-content: centre;
-  margin-top: 32px;
+.changelog-toggle{
+  display: block;
+  margin: 32px auto 0; /* centres the button */
 }
 
-.changelog-more__btn{
-  display: inline-flex;
-  align-items: centre;
-  justify-content: centre;
-  padding: 12px 24px;
-  border-radius: 6px;
-  background: #3b2a2a;
-  colour: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  list-style: none;
-  border: 0;
-  outline: none;
-}
-
-.changelog-more__btn::-webkit-details-marker{
+.changelog-more.is-hidden{
   display: none;
-}
-
-.changelog-more__btn::marker{
-  content: "";
 }
 
 .logo {
