@@ -83,10 +83,10 @@
             <h5>Automatic (recommended)</h5>
             <ol>
               <li>Add the APT repository</li>
-              <pre><code>echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" | sudo tee /etc/apt/sources.list.d/cockpit-dockermanager.list</code></pre>
+              <pre><code class="bash">echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" | sudo tee /etc/apt/sources.list.d/cockpit-dockermanager.list</code></pre>
         
               <li>Update and install</li>
-              <pre><code>sudo apt update
+              <pre><code class="bash">sudo apt update
         sudo apt install dockermanager</code></pre>
         
               <li>If Cockpit is already open, refresh your browser.</li>
@@ -96,7 +96,7 @@
               <summary><strong>Scripted</strong></summary>
               <ol>
                 <li>Run the following in a terminal</li>
-                <pre><code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code></pre>
+                <pre><code class="bash">curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code></pre>
         
                 <li>If Cockpit is already open, refresh your browser.</li>
               </ol>
@@ -108,7 +108,7 @@
             <h5>Automatic (recommended)</h5>
             <ol>
               <li>Add the YUM repository</li>
-              <pre><code>sudo tee /etc/yum.repos.d/cockpit-dockermanager.repo &lt;&lt;'EOF'
+              <pre><code class="bash">sudo tee /etc/yum.repos.d/cockpit-dockermanager.repo &lt;&lt;'EOF'
         [cockpit-dockermanager]
         name=Cockpit Docker Manager
         baseurl=https://chrisjbawden.github.io/cockpit-dockermanager/yum/stable/
@@ -118,7 +118,7 @@
         EOF</code></pre>
         
               <li>Install the package</li>
-              <pre><code>sudo yum install dockermanager</code></pre>
+              <pre><code class="bash">sudo yum install dockermanager</code></pre>
         
               <li>If Cockpit is already open, refresh your browser.</li>
             </ol>
@@ -127,7 +127,7 @@
               <summary><strong>Scripted</strong></summary>
               <ol>
                 <li>Run the following in a terminal</li>
-                <pre><code>curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash</code></pre>
+                <pre><code class="bash">curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash</code></pre>
         
                 <li>If Cockpit is already open, refresh your browser.</li>
               </ol>
