@@ -1,3 +1,17 @@
+(function () {
+  const btn = document.getElementById('changelogToggle');
+  const panel = document.getElementById('changelogMore');
+  if (!btn || !panel) return;
+
+  btn.addEventListener('click', function () {
+    const isHidden = panel.classList.toggle('is-hidden');
+    const expanded = !isHidden;
+
+    btn.setAttribute('aria-expanded', String(expanded));
+    btn.textContent = expanded ? 'Show less …' : 'Show more …';
+  });
+})();
+
 // utilities
 var get = function (selector, scope) {
   scope = scope ? scope : document;
