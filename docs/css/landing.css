@@ -1,4 +1,28 @@
 /* nav specialized to landing page */
+.changelog-more{
+  text-align: centre;
+  margin-top: 32px;
+}
+
+.changelog-more__btn{
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 6px;
+  background: #3b2a2a;
+  colour: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none; /* removes default triangle */
+}
+
+.changelog-more__btn::-webkit-details-marker{
+  display: none;
+}
+
+.changelog-more__btn:hover{
+  background: #2f2020;
+}
+
 .logo {
   background: url('../docker.png') no-repeat;
   background-size: contain;
