@@ -53,24 +53,86 @@
         <section class="js-section">
           <h3 class="section__title">Installation</h3>
           <div style="padding-left: 20px;">
-          <h4>Manually</h4>
-          <ol>
-            <li>Download the latest <code>.tar</code> release from <a href="https://github.com/chrisjbawden/cockpit-dockermanager/releases" target="_blank">GitHub Releases</a>.</li>
-            <li>Extract contents to your Cockpit applications directory:<br><br>
-            <code>sudo tar -xvf cockpit-dockermanager.tar.gz -C /usr/share/cockpit/</code></li> <br>
-            <li>If Cockpit is already open, refresh your browser.</li>
-          </ol>
-          <div class="callout">
-            <b>Note:</b> You may need to adjust the install path depending on your distro.
+        
+            <!-- Manual -->
+            <h4>Manual</h4>
+            <details>
+              <summary><strong>Show steps</strong></summary>
+              <ol>
+                <li>
+                  Download the latest <code>.tar</code> release from
+                  <a href="https://github.com/chrisjbawden/cockpit-dockermanager/releases" target="_blank">
+                    GitHub Releases
+                  </a>.
+                </li>
+                <li>
+                  Extract contents to your Cockpit applications directory:<br><br>
+                  <code>sudo tar -xvf cockpit-dockermanager.tar.gz -C /usr/share/cockpit/</code>
+                </li>
+                <li>If Cockpit is already open, refresh your browser.</li>
+              </ol>
+              <div class="callout">
+                <b>Note:</b> You may need to adjust the install path depending on your distro.
+              </div>
+            </details>
+        
+            <!-- Ubuntu -->
+            <h4>Ubuntu</h4>
+        
+            <h5>Automatic (recommended)</h5>
+            <ol>
+              <li>Add the APT repository</li>
+              <pre><code>echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" | sudo tee /etc/apt/sources.list.d/cockpit-dockermanager.list</code></pre>
+        
+              <li>Update and install</li>
+              <pre><code>sudo apt update
+        sudo apt install dockermanager</code></pre>
+        
+              <li>If Cockpit is already open, refresh your browser.</li>
+            </ol>
+        
+            <details>
+              <summary><strong>Scripted</strong></summary>
+              <ol>
+                <li>Run the following in a terminal</li>
+                <pre><code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code></pre>
+        
+                <li>If Cockpit is already open, refresh your browser.</li>
+              </ol>
+            </details>
+        
+            <!-- RHEL / Fedora -->
+            <h4>RHEL / Fedora</h4>
+        
+            <h5>Automatic (recommended)</h5>
+            <ol>
+              <li>Add the YUM repository</li>
+              <pre><code>sudo tee /etc/yum.repos.d/cockpit-dockermanager.repo &lt;&lt;'EOF'
+        [cockpit-dockermanager]
+        name=Cockpit Docker Manager
+        baseurl=https://chrisjbawden.github.io/cockpit-dockermanager/yum/stable/
+        enabled=1
+        gpgcheck=0
+        metadata_expire=0
+        EOF</code></pre>
+        
+              <li>Install the package</li>
+              <pre><code>sudo yum install dockermanager</code></pre>
+        
+              <li>If Cockpit is already open, refresh your browser.</li>
+            </ol>
+        
+            <details>
+              <summary><strong>Scripted</strong></summary>
+              <ol>
+                <li>Run the following in a terminal</li>
+                <pre><code>curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash</code></pre>
+        
+                <li>If Cockpit is already open, refresh your browser.</li>
+              </ol>
+            </details>
+        
           </div>
-
-          <h4>Scripted - Ubuntu</h4>
-          <ol>
-            <li>Run the following in a terminal</li> <br>
-            <code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code><br><br>
-            <li>If Cockpit is already open, refresh your browser.</li>
-          </ol>
-        </div>
         </section>
 
         <!-- Features -->
@@ -96,12 +158,16 @@
             </li>
             <br>
             <li><b>Q: How do I handle systematic update?</b><br>
-              A: You could explore a cron solution, ie; <br>
+              A: If you are using a manual install process, you could explore a cron solution, ie; <br>
               <br>
               <code>curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb && rm dockermanager.deb</code>
               <br>
               <br>
-              There is work to setup a repository to make this easier but this typically does not tend to be distro agnostic so this is a work in progress.
+            </li>
+            <br>
+            <li><b>Q: How do I subscribe to the canary branch</b><br>
+              A: The first option is to use the github docs as a repo for your distro (apt install dockermanager-canary/yum install dockermanmager-canary). Alternatively you could use the manual install process but target the 'dockermanager-canary' packages. There should always be a dockermanager-canary latest if you want to target an automated solution outside of configuring a repository.<br>
+              <br>
             </li>
             <!-- TODO: Add/expand more FAQs here -->
           </ul>
@@ -111,7 +177,7 @@
         <section class="js-section">
           <h3 class="section__title">Issues & Support</h3>
 
-           <p>Report bugs and feature requests via - <a href="https://github.com/chrisjbawden/cockpit-dockermanager/issues" target="_blank">GitHub Issues</a>.</p>
+           <p>Review and report issues or bugs via - <a href="https://github.com/chrisjbawden/cockpit-dockermanager/issues" target="_blank">GitHub Issues</a>.</p>
 
         </section>
 
@@ -120,7 +186,8 @@
           <h3 class="section__title">Contributing</h3>
           <ul>
             <li>Pull requests are welcome! Please target the <b>canary</b> branch for new features and testing.</li>
-            <li>Use issues to suggest new features, report bugs, or ask questions.</li>
+            <li>Use discussions to suggest new features, or ask questions and issues to report bugs or issues</li>
+            <li>Subscribe to the canary branch and provide input on changes/development </li>
             <li>Please follow the <a href="https://guides.github.com/introduction/flow/" target="_blank">GitHub Flow</a>.</li>
           </ul>
         </section>
@@ -138,7 +205,7 @@
 
       </article>
     </div>
-    <footer class="footer">Cockpit Docker Manager &copy; 2025 | <a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="_blank" class="link link--light">GitHub</a></footer>
+    <footer class="footer">Cockpit Docker Manager &copy; 2026 | <a href="https://github.com/chrisjbawden/cockpit-dockermanager" target="_blank" class="link link--light">GitHub</a></footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
     <script src="js/scribbler.js"></script>

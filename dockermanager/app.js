@@ -104,11 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
         pruneBtn.textContent = "Pruning...";
 
         const old = content.innerHTML;
-        content.innerHTML = `<div class="loading">Pruning dangling images…</div>`;
+        content.innerHTML = `<div class="loading">Pruning unused images…</div>`;
 
         const start = Date.now();
 
-        cockpit.spawn(["docker", "image", "prune", "-f"], { err: "message" })
+        cockpit.spawn(["docker", "image", "prune", "-a", "-f"], { err: "message" })
           .then(loadImagesList)
           .catch(err => {
             showBanner(`❌ Prune failed: ${escapeHtml(String(err))}`);
@@ -295,14 +295,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function hideLoading(){ if(loadingOverlay) loadingOverlay.style.display="none"; }
   function showError(msg){ containerList.innerHTML = `<div class="error">${msg}</div>`; }
+  function showDockerError(error){
+    const detail = escapeHtml(String(error || '')).trim();
+    const detailHTML = detail ? `<pre class="error-detail">${detail}</pre>` : '';
+    showError(`oh no it looks like something has gone wrong!${detailHTML}`);
+  }
 
   function hideLoading(){ if(loadingOverlay) loadingOverlay.style.display="none"; }
   function showError(msg){ containerList.innerHTML = `<div class="error">${msg}</div>`; }
 
+  function reloadContainersPromise(showLoading=false){
+    return new Promise(resolve => {
+      reloadContainers(() => resolve(), showLoading);
+    });
+  }
+
   function runDockerCommand(container, action){
     showBanner(`${action.charAt(0).toUpperCase()+action.slice(1)}ing ${container}…`);
-    cockpit.spawn(["docker", action, container], { err:"message" })
-      .then(()=>reloadContainers())
+    return cockpit.spawn(["docker", action, container], { err:"message" })
+      .then(()=>reloadContainersPromise())
       .catch(()=>showBanner(`❌ Failed to ${action} ${container}`));
   }
   window.runDockerCommand = runDockerCommand;
@@ -416,26 +427,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const nameSpan = document.getElementById('manage-container-name');
     const tabBtns  = Array.from(document.querySelectorAll('.tab-btn'));
     const tabPanels= Array.from(document.querySelectorAll('.tab-panel'));
-    const tabsBar  = document.querySelector('#manage-modal .tabs');
+    const stopBtn  = document.getElementById('manage-stop-btn');
+    const restartBtn = document.getElementById('manage-restart-btn');
+    const delBtn   = document.getElementById('delete-container-btn');
 
     nameSpan.textContent = containerName;
     modal.style.display  = 'block';
 
-    // Ensure EXACTLY one Delete button in the tabs row (right-aligned)
-    document.querySelectorAll('#manage-modal .logs-btn.danger').forEach(el=>el.remove());
-    const delBtn = document.createElement('button');
-    delBtn.id = 'delete-container-btn';
-    delBtn.className = 'logs-btn danger';
-    delBtn.textContent = 'Delete';
-    delBtn.style.marginLeft = 'auto';
-    tabsBar.appendChild(delBtn);
-    delBtn.onclick = () => {
-      const msg = `Delete container "${containerName}"? This will stop it if running.`;
-      if (!window.confirm(msg)) return;
-      cockpit.spawn(["docker","rm","-f",containerName],{err:"message"})
-        .then(()=>{ showBanner(`🗑️ Deleted ${containerName}`); stopManageLogStream(); stopModalTerminal(); modal.style.display='none'; reloadContainers(); })
-        .catch(err=>showBanner(`❌ Delete failed: ${escapeHtml(String(err))}`));
-    };
+    if (stopBtn){
+      stopBtn.onclick = () => {
+        const action = stopBtn.dataset.action || 'stop';
+        runDockerCommand(containerName, action).then(() => updateManageActionState());
+      };
+    }
+    if (restartBtn){
+      restartBtn.onclick = () => runDockerCommand(containerName, 'restart').then(() => updateManageActionState());
+    }
+    if (delBtn){
+      delBtn.onclick = () => {
+        const msg = `Delete container "${containerName}"? This will stop it if running.`;
+        if (!window.confirm(msg)) return;
+        cockpit.spawn(["docker","rm","-f",containerName],{err:"message"})
+          .then(()=>{ showBanner(`🗑️ Deleted ${containerName}`); stopManageLogStream(); stopModalTerminal(); modal.style.display='none'; reloadContainers(); })
+          .catch(err=>showBanner(`❌ Delete failed: ${escapeHtml(String(err))}`));
+      };
+    }
+
+    updateManageActionState();
 
     // default active tab
     activateTab('tab-logs');
@@ -605,6 +623,28 @@ document.addEventListener("DOMContentLoaded", () => {
       tabBtns.forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
       if (id !== 'tab-logs') stopManageLogStream();
     }
+
+    function updateManageActionState(){
+      if (!stopBtn) return;
+      let runningState = null;
+      document.querySelectorAll('.container-card').forEach(card => {
+        const name = card.querySelector('.container-name')?.textContent || '';
+        if (name === containerName) runningState = !card.classList.contains('stopped');
+      });
+      if (runningState === false){
+        stopBtn.disabled = false;
+        stopBtn.dataset.action = 'start';
+        stopBtn.textContent = 'Start';
+        stopBtn.title = 'Start container';
+        if (restartBtn) restartBtn.style.display = 'none';
+      } else {
+        stopBtn.disabled = false;
+        stopBtn.dataset.action = 'stop';
+        stopBtn.textContent = 'Stop';
+        stopBtn.title = 'Stop container';
+        if (restartBtn) restartBtn.style.display = '';
+      }
+    }
   }
   window.openManageModal = openManageModal;
 
@@ -712,7 +752,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const sorted = sortLines(lines);
       containerList.innerHTML = sorted.map(line=>{
         const [name,statusRaw="",portsRaw=""]=line.split("\t");
-        const running = statusRaw.toLowerCase().startsWith("up");
+        const running = /^(up|restarting)/.test(statusRaw.toLowerCase());
         const portsHTML = parsePorts(portsRaw);
         const stats = containerStats[name] || {};
         const pct = v => (typeof v==="string" && v.endsWith("%")) ? (Math.round(parseFloat(v))+"%") : v;
@@ -744,10 +784,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }).join("");
       applyFilterToDOM();
     })
-    .catch(()=>{
-      showError(`ERROR: Unable to access Docker!<br>
-      Ensure Docker is installed and your user is in the <code>docker</code> group.<br><br>
-      e.g. <code>sudo usermod -aG docker $USER</code><br>Log out/in afterwards.`);
+    .catch(err=>{
+      showDockerError(err);
     })
     .finally(()=>onDone?.());
   }
@@ -759,7 +797,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function initApp(){
     checkDockerAvailable()
       .then(()=>{ reloadContainers(undefined,true); setInterval(()=>{ if(Date.now()<pauseRefreshUntil) return; reloadContainers(undefined,false); },15000); })
-      .catch(()=>{ showError(`ERROR: Unable to access Docker!<br>Ensure Docker is installed and your user is in the <code>docker</code> group.`); })
+      .catch(err=>{ showDockerError(err); })
       .finally(()=>hideLoading());
   }
 
