@@ -2,6 +2,12 @@ name: Generate APT + RPM Repo Metadata
 
 on:
   workflow_dispatch:  # Manual trigger from the Actions tab
+  push:
+    paths:
+      - 'docs/dist/stable/main/binary-all/**'
+      - 'docs/yum/stable/**'
+    paths-ignore:
+      - 'docs/yum/stable/repodata/**'
 
 permissions:
   contents: write
