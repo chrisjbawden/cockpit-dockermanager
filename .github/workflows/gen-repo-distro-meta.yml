@@ -5,9 +5,7 @@ on:
   push:
     paths:
       - 'docs/dist/stable/main/binary-all/**'
-      - 'docs/yum/stable/**'
-    paths-ignore:
-      - 'docs/yum/stable/repodata/**'
+      - 'docs/yum/stable/*.rpm'
 
 permissions:
   contents: write
