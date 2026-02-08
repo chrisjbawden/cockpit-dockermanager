@@ -209,3 +209,20 @@ SHA512: 92149a84689c9ebfc7f4b0633cdc1884bab6c7e852bc6a1c33e64f40f4c6b16cc32d8dbd
 Description: Cockpit plugin – Docker Manager UI (CANARY channel)
  Canary channel with latest changes for testing.
 
+Package: dockermanager-canary
+Architecture: all
+Version: 1.0.8
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Conflicts: dockermanager
+Replaces: dockermanager
+Filename: dists/stable/main/binary-all/dockermanager-canary-1.0.8.deb
+Size: 19166
+MD5sum: 78399cc0e7609786d588de7a0658d484
+SHA1: 46049a5b9a53329819797263dd4450f9b7161a13
+SHA256: 26f36fcfb3917dd907fdfe99d02d4273486f74024749ddb6052ac4717965838c
+SHA512: 37694cead71f9ae155ef687c7316d8aca2dcda5c207ef75c447b62774c65a7f1c2f6daf3c12205c4b636812213be1bf054e921f3c21d9a79d29ac2416f8d1806
+Description: Cockpit plugin – Docker Manager UI (CANARY channel)
+ Canary channel with latest changes for testing.
+
