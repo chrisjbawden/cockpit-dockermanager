@@ -1,4 +1,4 @@
-name: Build Pages (docs only)
+name: Pages build
 
 on:
   workflow_dispatch:
