@@ -1,4 +1,223 @@
-// app.js 
+// app.js
+// Keep this plugin in sync with Cockpit's style selector (Default/Light/Dark).
+(function () {
+  const THEME_ATTRS = ["data-theme", "data-pf-theme", "theme"];
+  const THEME_CLASS_HINTS = [
+    "pf-v5-theme-light", "pf-v5-theme-dark",
+    "pf-theme-light", "pf-theme-dark"
+  ];
+  let lastAppliedTheme = null;
+
+  function parseThemeToken(v) {
+    const s = String(v || "").toLowerCase();
+    if (!s) return null;
+    if (s.includes("light")) return "light";
+    if (s.includes("dark")) return "dark";
+    return null;
+  }
+
+  function readThemeFromNode(node) {
+    if (!node) return null;
+    for (const attr of THEME_ATTRS) {
+      const t = parseThemeToken(node.getAttribute?.(attr));
+      if (t) return t;
+    }
+    if (node.classList) {
+      for (const c of node.classList) {
+        if (!THEME_CLASS_HINTS.includes(c)) continue;
+        const t = parseThemeToken(c);
+        if (t) return t;
+      }
+      // Last chance: inspect className text for "light"/"dark".
+      const t = parseThemeToken(node.className);
+      if (t) return t;
+    }
+    return null;
+  }
+
+  function readThemeFromDocument(doc) {
+    if (!doc) return null;
+    const html = doc.documentElement;
+    const body = doc.body;
+    return readThemeFromNode(html) || readThemeFromNode(body);
+  }
+
+  function readThemeFromComputedStyle(doc) {
+    if (!doc) return null;
+    try {
+      const html = doc.documentElement;
+      const body = doc.body;
+      const htmlScheme = parseThemeToken(getComputedStyle(html).colorScheme);
+      if (htmlScheme) return htmlScheme;
+      if (body) {
+        const bodyScheme = parseThemeToken(getComputedStyle(body).colorScheme);
+        if (bodyScheme) return bodyScheme;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  function readThemeFromStyleToggle(doc) {
+    if (!doc) return null;
+    const lightBtn = doc.querySelector("button#light");
+    const darkBtn = doc.querySelector("button#dark");
+    const autoBtn = doc.querySelector("button#auto");
+
+    const isSelected = btn =>
+      !!btn && (btn.classList.contains("pf-m-selected") || btn.getAttribute("aria-pressed") === "true");
+
+    if (isSelected(lightBtn)) return "light";
+    if (isSelected(darkBtn)) return "dark";
+    if (isSelected(autoBtn)) return "auto";
+    return null;
+  }
+
+  function readThemeFromStorage(win) {
+    if (!win) return null;
+    try {
+      const raw = win.localStorage && win.localStorage.getItem("shell:style");
+      const t = parseThemeToken(raw);
+      if (t) return t;
+      const s = String(raw || "").toLowerCase();
+      if (s === "auto" || s === "default") return "auto";
+    } catch (_) {}
+    return null;
+  }
+
+  function resolveCockpitTheme() {
+    let theme = null;
+    // Prefer parent frame (Cockpit shell), if same-origin.
+    try {
+      if (window.parent && window.parent !== window) {
+        const pwin = window.parent;
+        const pdoc = pwin.document;
+        theme = readThemeFromStorage(pwin);
+        if (theme === "light" || theme === "dark") return theme;
+        if (theme === "auto") {
+          return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+            ? "light"
+            : "dark";
+        }
+        theme =
+          readThemeFromStyleToggle(pdoc) ||
+          readThemeFromDocument(pdoc) ||
+          readThemeFromComputedStyle(pdoc);
+        if (theme === "light" || theme === "dark") return theme;
+        if (theme === "auto") {
+          return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+            ? "light"
+            : "dark";
+        }
+      }
+    } catch (_) {}
+
+    // Current frame storage (Cockpit also keeps style here in many setups).
+    theme = readThemeFromStorage(window);
+    if (theme === "light" || theme === "dark") return theme;
+    if (theme === "auto") {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+        ? "light"
+        : "dark";
+    }
+
+    // Some layouts may render the style toggle in this same document.
+    theme = readThemeFromStyleToggle(document);
+    if (theme === "light" || theme === "dark") return theme;
+    if (theme === "auto") {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+        ? "light"
+        : "dark";
+    }
+
+    // Fall back to explicit markers on this document.
+    theme =
+      readThemeFromDocument(document) ||
+      readThemeFromComputedStyle(document);
+    if (theme) return theme;
+
+    // "Default" usually follows OS preference.
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark";
+  }
+
+  function applyTheme(theme) {
+    const t = theme === "light" ? "light" : "dark";
+    if (lastAppliedTheme === t) return;
+    lastAppliedTheme = t;
+    const root = document.documentElement;
+    root.setAttribute("data-cdm-theme", t);
+    root.classList.toggle("theme-light", t === "light");
+    root.classList.toggle("theme-dark", t !== "light");
+    if (document.body) {
+      document.body.classList.toggle("theme-light", t === "light");
+      document.body.classList.toggle("theme-dark", t !== "light");
+    }
+  }
+
+  function syncTheme() {
+    applyTheme(resolveCockpitTheme());
+  }
+
+  function installThemeObservers() {
+    const observers = [];
+    const attrFilter = ["class", "style", "data-theme", "data-pf-theme", "theme"];
+
+    // Watch this document for any Cockpit-managed theme attributes/classes.
+    const watchSelfNode = node => {
+      if (!node) return;
+      const mo = new MutationObserver(syncTheme);
+      mo.observe(node, { attributes: true, attributeFilter: attrFilter });
+      observers.push(mo);
+    };
+    watchSelfNode(document.documentElement);
+    watchSelfNode(document.body);
+
+    try {
+      if (window.parent && window.parent !== window) {
+        const pdoc = window.parent.document;
+        // Watch only parent root/body theme-related attributes.
+        const watchParentNode = node => {
+          if (!node) return;
+          const mo = new MutationObserver(syncTheme);
+          mo.observe(node, { attributes: true, attributeFilter: attrFilter });
+          observers.push(mo);
+        };
+        watchParentNode(pdoc.documentElement);
+        watchParentNode(pdoc.body);
+
+        // React immediately when style toggle buttons are clicked.
+        pdoc.addEventListener("click", e => {
+          const btn = e.target && e.target.closest && e.target.closest("button#auto, button#light, button#dark");
+          if (!btn) return;
+          setTimeout(syncTheme, 0);
+        }, true);
+      }
+    } catch (_) {}
+
+    if (window.matchMedia) {
+      const mql = window.matchMedia("(prefers-color-scheme: light)");
+      if (typeof mql.addEventListener === "function") mql.addEventListener("change", syncTheme);
+      else if (typeof mql.addListener === "function") mql.addListener(syncTheme);
+    }
+
+    // Safety net for hosts that don't emit useful mutation events.
+    setInterval(syncTheme, 1500);
+
+    return observers;
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      syncTheme();
+      installThemeObservers();
+    });
+  } else {
+    syncTheme();
+    installThemeObservers();
+  }
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   const containerList   = document.getElementById("container-list");
   const refreshButton   = document.getElementById("refresh-button");
@@ -20,6 +239,54 @@ document.addEventListener("DOMContentLoaded", () => {
   // keep exactly ONE declaration for the logs follower used in the Manage modal
   let manageLogProc = null;
   let manageLogToken = 0;
+
+  function spawnDocker(args, opts = {}) {
+    return cockpit.spawn(args, { err: "message", superuser: "try", ...opts });
+  }
+
+  function isSuperuserStorageKey(key) {
+    return key === "superuser-key" || String(key || "").startsWith("superuser:");
+  }
+
+  function readSuperuserStorageDigest() {
+    try {
+      const pairs = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!isSuperuserStorageKey(key)) continue;
+        pairs.push(`${key}=${localStorage.getItem(key)}`);
+      }
+      pairs.sort();
+      return pairs.join("|");
+    } catch (_) {
+      return "";
+    }
+  }
+
+  let superuserStorageDigest = readSuperuserStorageDigest();
+  let superuserRefreshTimer = null;
+  function scheduleSuperuserRefresh() {
+    if (superuserRefreshTimer) clearTimeout(superuserRefreshTimer);
+    superuserRefreshTimer = setTimeout(() => {
+      superuserRefreshTimer = null;
+      checkDockerAvailable()
+        .then(() => reloadContainers(undefined, true))
+        .catch(err => showDockerError(err));
+    }, 250);
+  }
+
+  function refreshOnSuperuserStorageChange() {
+    const nextDigest = readSuperuserStorageDigest();
+    if (nextDigest === superuserStorageDigest) return;
+    superuserStorageDigest = nextDigest;
+    scheduleSuperuserRefresh();
+  }
+
+  window.addEventListener("storage", event => {
+    const key = event?.key;
+    if (key == null || isSuperuserStorageKey(key)) refreshOnSuperuserStorageChange();
+  });
+  setInterval(refreshOnSuperuserStorageChange, 1000);
 
   // --- focus preservation around refresh ---
   let rememberedFocus = null;
@@ -108,10 +375,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const start = Date.now();
 
-        cockpit.spawn(["docker", "image", "prune", "-a", "-f"], { err: "message" })
+        spawnDocker(["docker", "image", "prune", "-a", "-f"])
           .then(loadImagesList)
           .catch(err => {
-            showBanner(`❌ Prune failed: ${escapeHtml(String(err))}`);
+            showBanner(`Prune failed - ${escapeHtml(String(err))}`);
             content.innerHTML = old;
           })
           .finally(() => {
@@ -137,8 +404,8 @@ document.addEventListener("DOMContentLoaded", () => {
     content.innerHTML = `<div class="loading">Loading images…</div>`;
     const fmt = "{{.Repository}}:{{.Tag}}\\t{{.ID}}\\t{{.Size}}\\t{{.CreatedSince}}";
     Promise.all([
-      cockpit.spawn(["docker","images","--no-trunc","--format",fmt],{err:"message"}),
-      cockpit.spawn(["docker","ps","-a","--no-trunc","--format","{{.Image}}\t{{.ImageID}}"],{err:"message"}).catch(()=>"")
+      spawnDocker(["docker","images","--no-trunc","--format",fmt]),
+      spawnDocker(["docker","ps","-a","--no-trunc","--format","{{.Image}}\t{{.ImageID}}"]).catch(()=>"")
     ])
       .then(([imagesOut, containersOut]) => {
         const usedImageRefs = new Set();
@@ -200,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.disabled = true;
             btn.textContent = "Deleting…";
             const shortId = imageId.replace(/^sha256:/,"").slice(0,12) || imageId;
-            cockpit.spawn(["docker","rmi",imageId],{err:"message"})
+            spawnDocker(["docker","rmi",imageId])
               .then(()=>{ showBanner(`🗑️ Deleted ${shortId}`); loadImagesList(); })
               .catch(err=>{ showBanner(`❌ Delete failed: ${escapeHtml(String(err))}`); btn.disabled=false; btn.textContent=orig; });
           });
@@ -259,9 +526,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const toast = document.createElement("div");
     toast.className = `toast toast-${variant}`;
 
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString();
-
     const iconChar =
       variant === "success" ? "✔️" :
       variant === "error"   ? "❌" : "ℹ️";
@@ -271,7 +535,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="toast-content">
         <p class="toast-title">${escapeHtml(String(title))}</p>
         ${body ? `<p class="toast-body">${escapeHtml(String(body))}</p>` : ""}
-        <div class="toast-time">${escapeHtml(timeStr)}</div>
       </div>
       <button class="toast-close" aria-label="Dismiss notification">×</button>
     `;
@@ -312,7 +575,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function runDockerCommand(container, action){
     showBanner(`${action.charAt(0).toUpperCase()+action.slice(1)}ing ${container}…`);
-    return cockpit.spawn(["docker", action, container], { err:"message" })
+    return spawnDocker(["docker", action, container])
       .then(()=>reloadContainersPromise())
       .catch(()=>showBanner(`❌ Failed to ${action} ${container}`));
   }
@@ -346,10 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadContainerStats(){
-    return cockpit.spawn(
-      ["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"],
-      { err:"message" }
-    )
+    return spawnDocker(["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"])
     .then(out => {
       const id2name = {};
       (out.trim() ? out.trim().split("\n") : []).forEach(line => {
@@ -380,10 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      return cockpit.spawn(
-        ["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"],
-        { err:"message" }
-      )
+      return spawnDocker(["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"])
       .then(stats => {
         containerStats = {};
         (stats.trim() ? stats.trim().split("\n") : []).forEach(line => {
@@ -447,7 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
       delBtn.onclick = () => {
         const msg = `Delete container "${containerName}"? This will stop it if running.`;
         if (!window.confirm(msg)) return;
-        cockpit.spawn(["docker","rm","-f",containerName],{err:"message"})
+        spawnDocker(["docker","rm","-f",containerName])
           .then(()=>{ showBanner(`🗑️ Deleted ${containerName}`); stopManageLogStream(); stopModalTerminal(); modal.style.display='none'; reloadContainers(); })
           .catch(err=>showBanner(`❌ Delete failed: ${escapeHtml(String(err))}`));
       };
@@ -553,7 +810,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!trimmed){ appendPrompt(); return; }
       const target = terminalContainer || containerName;
       const shell = (shellSel?.value || '/bin/sh').trim() || '/bin/sh';
-      const proc = cockpit.spawn(['docker','exec', target, shell, '-lc', cmd], { err:'message', superuser:'try' });
+      const proc = spawnDocker(['docker','exec', target, shell, '-lc', cmd]);
       proc.stream(data => { if (terminalSessionId === session) appendTerminalChunk(data); });
       proc.then(
         () => { if (terminalSessionId === session) appendPrompt(); },
@@ -671,7 +928,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!detailsEl) return;
     detailsEl.innerHTML = `<div class="loading">Loading details…</div>`;
 
-    cockpit.spawn(["docker","inspect","--type","container", name], { err:"message" })
+    spawnDocker(["docker","inspect","--type","container", name])
       .then(out => {
         try {
           const parsed = JSON.parse(out);
@@ -679,7 +936,7 @@ document.addEventListener("DOMContentLoaded", () => {
           detailsEl.innerHTML = renderDetails(obj);
         } catch (e) {
           // Fallback: ask docker to pre-format JSON
-          cockpit.spawn(["docker","inspect","--type","container","--format","{{json .}}", name], { err:"message" })
+          spawnDocker(["docker","inspect","--type","container","--format","{{json .}}", name])
             .then(out2 => { detailsEl.innerHTML = renderDetails(JSON.parse(out2)); })
             .catch(err => { detailsEl.innerHTML = `<div class="error">Failed to parse details: ${escapeHtml(String(err))}</div>`; });
         }
@@ -698,7 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const args = ["docker", "logs"];
     args.push("--tail", tailArg);
     args.push("-f", containerName);
-    const proc = cockpit.spawn(args, { err: "out", pty: false });
+    const proc = spawnDocker(args, { err: "out", pty: false });
     manageLogProc = proc;
     proc.stream(data => {
       let pre = el.querySelector('pre');
@@ -726,7 +983,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadInitialLogsInto(containerName, targetId) {
     const el = document.getElementById(targetId);
     el.innerHTML = '<div class="loading">Loading logs...</div>';
-    cockpit.spawn(["docker", "logs", "--tail", "100", containerName], { err: "message" })
+    spawnDocker(["docker", "logs", "--tail", "100", containerName])
       .then(output => { el.innerHTML = `<pre>${escapeHtml(output)}</pre>`; el.scrollTop = el.scrollHeight; })
       .catch(error => { el.innerHTML = `<div class="error">Failed to load logs: ${escapeHtml(String(error))}</div>`; });
   }
@@ -743,7 +1000,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadContainers(onDone, showLoading=false){
     if (showLoading) containerList.innerHTML = `<div class="loading">Loading containers...</div>`;
     Promise.all([
-      cockpit.spawn(["docker","ps","-a","--format","{{.Names}}\t{{.Status}}\t{{.Ports}}"],{err:"message"}),
+      spawnDocker(["docker","ps","-a","--format","{{.Names}}\t{{.Status}}\t{{.Ports}}"]),
       loadContainerStats()
     ])
     .then(([out])=>{
@@ -792,7 +1049,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function reloadContainers(done, showLoading=false){ rememberFocus(); loadContainers(()=>{ restoreRememberedFocus(); done?.(); }, showLoading); }
   function applyFilterToDOM(){ const q=(currentSearch||'').toLowerCase(); containerList.querySelectorAll('.container-card').forEach(card=>{ const name=(card.querySelector('.container-name')?.textContent||'').toLowerCase(); card.style.display = (!q||name.includes(q)) ? '' : 'none'; }); }
-  function checkDockerAvailable(){ return cockpit.spawn(["docker","info"],{err:"message"}); }
+  function checkDockerAvailable(){ return spawnDocker(["docker","info"]); }
 
   function initApp(){
     checkDockerAvailable()
@@ -922,3 +1179,4 @@ function renderDetails(obj){
       </div>
     </div>`;
 }
+  let lastAppliedTheme = null;
