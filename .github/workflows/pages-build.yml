@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "!docs/yum/**"
+      - "!docs/dists/**"
   workflow_run:
     workflows:
       - Generate APT + RPM Repo Metadata
