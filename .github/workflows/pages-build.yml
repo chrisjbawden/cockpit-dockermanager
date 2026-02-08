@@ -1,4 +1,4 @@
-name: Build & deploy GitHub Pages (docs only)
+name: Build Pages (docs only)
 
 on:
   workflow_dispatch:
