@@ -98,7 +98,7 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 #### v1.0.8
 - Toast notification modified
-- Integrated with cockpit superuser mechanism for permission management
+- Integrated cockpit superuser mechanism for permission management
 - Theme support added
 
 #### v1.0.7.3
