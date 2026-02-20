@@ -1,4 +1,4 @@
-name: Build Packages
+name: Build Packages (DEB + RPM)
 
 on:
   workflow_dispatch:
