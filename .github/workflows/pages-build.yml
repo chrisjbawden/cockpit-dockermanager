@@ -1,4 +1,4 @@
-name: Build & deploy GitHub Pages (docs only)
+name: Pages build
 
 on:
   workflow_dispatch:
@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "!docs/yum/**"
+      - "!docs/dists/**"
   workflow_run:
     workflows:
       - Generate APT + RPM Repo Metadata
