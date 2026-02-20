@@ -96,6 +96,11 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 
 ### Changelog
 
+#### v1.0.8
+- Toast notification modified
+- Integrated cockpit superuser mechanism for permission management
+- Theme support added
+
 #### v1.0.7.3
 - Bugfix - start/stop buttons in container dialog/pane
 - Bugfix - toast notification styling
@@ -113,11 +118,6 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
 - Minor UI changes
 - Added ability to delete containers
 
-#### v1.0.6
-
-- Added functionality to pin/fix header
-- Added functionality to delete images
-- Resource stats update pushed to background
 
 <div align="center">
   <a href="https://chrisjbawden.github.io/cockpit-dockermanager/index.html" target="_blank" rel="noopener noreferrer">...</a>

@@ -42,7 +42,6 @@ body {
 .toast-icon { font-size: 1.1em; line-height: 1.1; }
 .toast-title { margin: 0; font-weight: 600; }
 .toast-body { margin: 4px 0 0; color: #d0d0d0; font-size: 0.9em; }
-.toast-time { margin-top: 6px; color: #9a9a9a; font-size: 0.75em; }
 .toast-close {
   background: transparent;
   color: #bdbdbd;
@@ -405,6 +404,22 @@ select::-ms-expand {
 #version-stamp {
   text-align: center;
   padding-top: 10px;
+  color: #ffffff;
+}
+#version-stamp a {
+  color: #ffffff;
+  text-decoration: none;
+}
+#version-stamp a:hover {
+  text-decoration: underline;
+}
+html[data-cdm-theme="light"] #version-stamp,
+html[data-theme="light"] #version-stamp {
+  color: #111827;
+}
+html[data-cdm-theme="light"] #version-stamp a,
+html[data-theme="light"] #version-stamp a {
+  color: #111827;
 }
 
 /* ================================
@@ -774,4 +789,498 @@ body.with-terminal-padding {
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 0.6s linear infinite;
+}
+
+/* ================================
+   Cockpit Theme Integration
+   - Keep current dark design as default
+   - Apply light palette when Cockpit/session style is light
+================================ */
+:root {
+  color-scheme: dark;
+}
+
+/* Cockpit/PatternFly commonly exposes light mode through one of these markers */
+html[data-theme="light"],
+body[data-theme="light"],
+html[data-pf-theme="light"],
+body[data-pf-theme="light"],
+html.theme-light,
+body.theme-light,
+html.pf-v5-theme-light,
+body.pf-v5-theme-light {
+  color-scheme: light;
+}
+
+/* If no explicit theme marker is present, follow system light preference */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]):not([data-pf-theme="dark"]):not(.theme-dark):not(.pf-v5-theme-dark) {
+    color-scheme: light;
+  }
+}
+
+/* Explicit Cockpit light mode overrides */
+html[data-theme="light"] body,
+body[data-theme="light"],
+html[data-pf-theme="light"] body,
+body[data-pf-theme="light"],
+html.theme-light body,
+body.theme-light,
+html.pf-v5-theme-light body,
+body.pf-v5-theme-light {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+html[data-theme="light"] #loading-overlay,
+body[data-theme="light"] #loading-overlay,
+html[data-pf-theme="light"] #loading-overlay,
+body[data-pf-theme="light"] #loading-overlay,
+html.theme-light #loading-overlay,
+body.theme-light #loading-overlay,
+html.pf-v5-theme-light #loading-overlay,
+body.pf-v5-theme-light #loading-overlay {
+  background: rgba(248, 250, 252, 0.88);
+}
+
+html[data-theme="light"] .app-header.pinned,
+body[data-theme="light"] .app-header.pinned,
+html[data-pf-theme="light"] .app-header.pinned,
+body[data-pf-theme="light"] .app-header.pinned,
+html.theme-light .app-header.pinned,
+body.theme-light .app-header.pinned,
+html.pf-v5-theme-light .app-header.pinned,
+body.pf-v5-theme-light .app-header.pinned {
+  background: #f3f4f6;
+  border-bottom-color: #d1d5db;
+}
+
+html[data-theme="light"] #pin-btn,
+body[data-theme="light"] #pin-btn,
+html[data-pf-theme="light"] #pin-btn,
+body[data-pf-theme="light"] #pin-btn,
+html.theme-light #pin-btn,
+body.theme-light #pin-btn,
+html.pf-v5-theme-light #pin-btn,
+body.pf-v5-theme-light #pin-btn {
+  background: #ffffff;
+  border-color: #d1d5db;
+}
+
+html[data-theme="light"] #pin-btn svg,
+body[data-theme="light"] #pin-btn svg,
+html[data-pf-theme="light"] #pin-btn svg,
+body[data-pf-theme="light"] #pin-btn svg,
+html.theme-light #pin-btn svg,
+body.theme-light #pin-btn svg,
+html.pf-v5-theme-light #pin-btn svg,
+body.pf-v5-theme-light #pin-btn svg {
+  color: #374151;
+}
+
+html[data-theme="light"] #pin-btn:hover,
+body[data-theme="light"] #pin-btn:hover,
+html[data-pf-theme="light"] #pin-btn:hover,
+body[data-pf-theme="light"] #pin-btn:hover,
+html.theme-light #pin-btn:hover,
+body.theme-light #pin-btn:hover,
+html.pf-v5-theme-light #pin-btn:hover,
+body.pf-v5-theme-light #pin-btn:hover {
+  background: #f3f4f6;
+}
+
+html[data-theme="light"] .container-card,
+body[data-theme="light"] .container-card,
+html[data-pf-theme="light"] .container-card,
+body[data-pf-theme="light"] .container-card,
+html.theme-light .container-card,
+body.theme-light .container-card,
+html.pf-v5-theme-light .container-card,
+body.pf-v5-theme-light .container-card {
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] .container-card.stopped,
+body[data-theme="light"] .container-card.stopped,
+html[data-pf-theme="light"] .container-card.stopped,
+body[data-pf-theme="light"] .container-card.stopped,
+html.theme-light .container-card.stopped,
+body.theme-light .container-card.stopped,
+html.pf-v5-theme-light .container-card.stopped,
+body.pf-v5-theme-light .container-card.stopped {
+  background: #eef2f7;
+}
+
+html[data-theme="light"] .container-status,
+body[data-theme="light"] .container-status,
+html[data-pf-theme="light"] .container-status,
+body[data-pf-theme="light"] .container-status,
+html.theme-light .container-status,
+body.theme-light .container-status,
+html.pf-v5-theme-light .container-status,
+body.pf-v5-theme-light .container-status,
+html[data-theme="light"] .stat-label,
+body[data-theme="light"] .stat-label,
+html[data-pf-theme="light"] .stat-label,
+body[data-pf-theme="light"] .stat-label,
+html.theme-light .stat-label,
+body.theme-light .stat-label,
+html.pf-v5-theme-light .stat-label,
+body.pf-v5-theme-light .stat-label,
+html[data-theme="light"] .image-id,
+body[data-theme="light"] .image-id,
+html[data-pf-theme="light"] .image-id,
+body[data-pf-theme="light"] .image-id,
+html.theme-light .image-id,
+body.theme-light .image-id,
+html.pf-v5-theme-light .image-id,
+body.pf-v5-theme-light .image-id,
+html[data-theme="light"] .image-age,
+body[data-theme="light"] .image-age,
+html[data-pf-theme="light"] .image-age,
+body[data-pf-theme="light"] .image-age,
+html.theme-light .image-age,
+body.theme-light .image-age,
+html.pf-v5-theme-light .image-age,
+body.pf-v5-theme-light .image-age {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .container-ports,
+body[data-theme="light"] .container-ports,
+html[data-pf-theme="light"] .container-ports,
+body[data-pf-theme="light"] .container-ports,
+html.theme-light .container-ports,
+body.theme-light .container-ports,
+html.pf-v5-theme-light .container-ports,
+body.pf-v5-theme-light .container-ports {
+  color: #4b5563;
+}
+
+html[data-cdm-theme="light"] .image-size,
+html[data-theme="light"] .image-size,
+body[data-theme="light"] .image-size,
+html[data-pf-theme="light"] .image-size,
+body[data-pf-theme="light"] .image-size,
+html.theme-light .image-size,
+body.theme-light .image-size,
+html.pf-v5-theme-light .image-size,
+body.pf-v5-theme-light .image-size {
+  color: #4fa9ff;
+}
+
+html[data-theme="light"] .loading,
+body[data-theme="light"] .loading,
+html[data-pf-theme="light"] .loading,
+body[data-pf-theme="light"] .loading,
+html.theme-light .loading,
+body.theme-light .loading,
+html.pf-v5-theme-light .loading,
+body.pf-v5-theme-light .loading,
+html[data-theme="light"] .empty,
+body[data-theme="light"] .empty,
+html[data-pf-theme="light"] .empty,
+body[data-pf-theme="light"] .empty,
+html.theme-light .empty,
+body.theme-light .empty,
+html.pf-v5-theme-light .empty,
+body.pf-v5-theme-light .empty,
+html[data-theme="light"] .error,
+body[data-theme="light"] .error,
+html[data-pf-theme="light"] .error,
+body[data-pf-theme="light"] .error,
+html.theme-light .error,
+body.theme-light .error,
+html.pf-v5-theme-light .error,
+body.pf-v5-theme-light .error {
+  background: #ffffff;
+  color: #9f1239;
+  border-left-color: #ef4444;
+}
+
+html[data-theme="light"] .error-detail,
+body[data-theme="light"] .error-detail,
+html[data-pf-theme="light"] .error-detail,
+body[data-pf-theme="light"] .error-detail,
+html.theme-light .error-detail,
+body.theme-light .error-detail,
+html.pf-v5-theme-light .error-detail,
+body.pf-v5-theme-light .error-detail {
+  background: #f8fafc;
+  border-color: #d1d5db;
+  color: #7f1d1d;
+}
+
+html[data-theme="light"] .search-toggle,
+body[data-theme="light"] .search-toggle,
+html[data-pf-theme="light"] .search-toggle,
+body[data-pf-theme="light"] .search-toggle,
+html.theme-light .search-toggle,
+body.theme-light .search-toggle,
+html.pf-v5-theme-light .search-toggle,
+body.pf-v5-theme-light .search-toggle,
+html[data-theme="light"] #search-input,
+body[data-theme="light"] #search-input,
+html[data-pf-theme="light"] #search-input,
+body[data-pf-theme="light"] #search-input,
+html.theme-light #search-input,
+body.theme-light #search-input,
+html.pf-v5-theme-light #search-input,
+body.pf-v5-theme-light #search-input,
+html[data-theme="light"] .modern-input,
+body[data-theme="light"] .modern-input,
+html[data-pf-theme="light"] .modern-input,
+body[data-pf-theme="light"] .modern-input,
+html.theme-light .modern-input,
+body.theme-light .modern-input,
+html.pf-v5-theme-light .modern-input,
+body.pf-v5-theme-light .modern-input,
+html[data-theme="light"] #sort-select,
+body[data-theme="light"] #sort-select,
+html[data-pf-theme="light"] #sort-select,
+body[data-pf-theme="light"] #sort-select,
+html.theme-light #sort-select,
+body.theme-light #sort-select,
+html.pf-v5-theme-light #sort-select,
+body.pf-v5-theme-light #sort-select,
+html[data-theme="light"] .modern-select,
+body[data-theme="light"] .modern-select,
+html[data-pf-theme="light"] .modern-select,
+body[data-pf-theme="light"] .modern-select,
+html.theme-light .modern-select,
+body.theme-light .modern-select,
+html.pf-v5-theme-light .modern-select,
+body.pf-v5-theme-light .modern-select {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: #d1d5db;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+html[data-theme="light"] .search-toggle:hover,
+body[data-theme="light"] .search-toggle:hover,
+html[data-pf-theme="light"] .search-toggle:hover,
+body[data-pf-theme="light"] .search-toggle:hover,
+html.theme-light .search-toggle:hover,
+body.theme-light .search-toggle:hover,
+html.pf-v5-theme-light .search-toggle:hover,
+body.pf-v5-theme-light .search-toggle:hover,
+html[data-theme="light"] #search-input:hover,
+body[data-theme="light"] #search-input:hover,
+html[data-pf-theme="light"] #search-input:hover,
+body[data-pf-theme="light"] #search-input:hover,
+html.theme-light #search-input:hover,
+body.theme-light #search-input:hover,
+html.pf-v5-theme-light #search-input:hover,
+body.pf-v5-theme-light #search-input:hover,
+html[data-theme="light"] .modern-input:hover,
+body[data-theme="light"] .modern-input:hover,
+html[data-pf-theme="light"] .modern-input:hover,
+body[data-pf-theme="light"] .modern-input:hover,
+html.theme-light .modern-input:hover,
+body.theme-light .modern-input:hover,
+html.pf-v5-theme-light .modern-input:hover,
+body.pf-v5-theme-light .modern-input:hover,
+html[data-theme="light"] #sort-select:hover,
+body[data-theme="light"] #sort-select:hover,
+html[data-pf-theme="light"] #sort-select:hover,
+body[data-pf-theme="light"] #sort-select:hover,
+html.theme-light #sort-select:hover,
+body.theme-light #sort-select:hover,
+html.pf-v5-theme-light #sort-select:hover,
+body.pf-v5-theme-light #sort-select:hover,
+html[data-theme="light"] .modern-select:hover,
+body[data-theme="light"] .modern-select:hover,
+html[data-pf-theme="light"] .modern-select:hover,
+body[data-pf-theme="light"] .modern-select:hover,
+html.theme-light .modern-select:hover,
+body.theme-light .modern-select:hover,
+html.pf-v5-theme-light .modern-select:hover,
+body.pf-v5-theme-light .modern-select:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+html[data-theme="light"] .toast,
+body[data-theme="light"] .toast,
+html[data-pf-theme="light"] .toast,
+body[data-pf-theme="light"] .toast,
+html.theme-light .toast,
+body.theme-light .toast,
+html.pf-v5-theme-light .toast,
+body.pf-v5-theme-light .toast,
+html[data-theme="light"] .logs-modal-content,
+body[data-theme="light"] .logs-modal-content,
+html[data-pf-theme="light"] .logs-modal-content,
+body[data-pf-theme="light"] .logs-modal-content,
+html.theme-light .logs-modal-content,
+body.theme-light .logs-modal-content,
+html.pf-v5-theme-light .logs-modal-content,
+body.pf-v5-theme-light .logs-modal-content,
+html[data-theme="light"] .logs-modal-header,
+body[data-theme="light"] .logs-modal-header,
+html[data-pf-theme="light"] .logs-modal-header,
+body[data-pf-theme="light"] .logs-modal-header,
+html.theme-light .logs-modal-header,
+body.theme-light .logs-modal-header,
+html.pf-v5-theme-light .logs-modal-header,
+body.pf-v5-theme-light .logs-modal-header,
+html[data-theme="light"] .tabs,
+body[data-theme="light"] .tabs,
+html[data-pf-theme="light"] .tabs,
+body[data-pf-theme="light"] .tabs,
+html.theme-light .tabs,
+body.theme-light .tabs,
+html.pf-v5-theme-light .tabs,
+body.pf-v5-theme-light .tabs,
+html[data-theme="light"] .logs-content,
+body[data-theme="light"] .logs-content,
+html[data-pf-theme="light"] .logs-content,
+body[data-pf-theme="light"] .logs-content,
+html.theme-light .logs-content,
+body.theme-light .logs-content,
+html.pf-v5-theme-light .logs-content,
+body.pf-v5-theme-light .logs-content,
+html[data-theme="light"] .terminal-toolbar,
+body[data-theme="light"] .terminal-toolbar,
+html[data-pf-theme="light"] .terminal-toolbar,
+body[data-pf-theme="light"] .terminal-toolbar,
+html.theme-light .terminal-toolbar,
+body.theme-light .terminal-toolbar,
+html.pf-v5-theme-light .terminal-toolbar,
+body.pf-v5-theme-light .terminal-toolbar,
+html[data-theme="light"] .modal-terminal,
+body[data-theme="light"] .modal-terminal,
+html[data-pf-theme="light"] .modal-terminal,
+body[data-pf-theme="light"] .modal-terminal,
+html.theme-light .modal-terminal,
+body.theme-light .modal-terminal,
+html.pf-v5-theme-light .modal-terminal,
+body.pf-v5-theme-light .modal-terminal,
+html[data-theme="light"] .modal-terminal-output,
+body[data-theme="light"] .modal-terminal-output,
+html[data-pf-theme="light"] .modal-terminal-output,
+body[data-pf-theme="light"] .modal-terminal-output,
+html.theme-light .modal-terminal-output,
+body.theme-light .modal-terminal-output,
+html.pf-v5-theme-light .modal-terminal-output,
+body.pf-v5-theme-light .modal-terminal-output,
+html[data-theme="light"] .modal-terminal-inputbar,
+body[data-theme="light"] .modal-terminal-inputbar,
+html[data-pf-theme="light"] .modal-terminal-inputbar,
+body[data-pf-theme="light"] .modal-terminal-inputbar,
+html.theme-light .modal-terminal-inputbar,
+body.theme-light .modal-terminal-inputbar,
+html.pf-v5-theme-light .modal-terminal-inputbar,
+body.pf-v5-theme-light .modal-terminal-inputbar,
+html[data-theme="light"] .image-row,
+body[data-theme="light"] .image-row,
+html[data-pf-theme="light"] .image-row,
+body[data-pf-theme="light"] .image-row,
+html.theme-light .image-row,
+body.theme-light .image-row,
+html.pf-v5-theme-light .image-row,
+body.pf-v5-theme-light .image-row {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: #d1d5db;
+}
+
+html[data-theme="light"] .logs-content pre,
+body[data-theme="light"] .logs-content pre,
+html[data-pf-theme="light"] .logs-content pre,
+body[data-pf-theme="light"] .logs-content pre,
+html.theme-light .logs-content pre,
+body.theme-light .logs-content pre,
+html.pf-v5-theme-light .logs-content pre,
+body.pf-v5-theme-light .logs-content pre,
+html[data-theme="light"] .logs-modal-header h3,
+body[data-theme="light"] .logs-modal-header h3,
+html[data-pf-theme="light"] .logs-modal-header h3,
+body[data-pf-theme="light"] .logs-modal-header h3,
+html.theme-light .logs-modal-header h3,
+body.theme-light .logs-modal-header h3,
+html.pf-v5-theme-light .logs-modal-header h3,
+body.pf-v5-theme-light .logs-modal-header h3,
+html[data-theme="light"] .image-name,
+body[data-theme="light"] .image-name,
+html[data-pf-theme="light"] .image-name,
+body[data-pf-theme="light"] .image-name,
+html.theme-light .image-name,
+body.theme-light .image-name,
+html.pf-v5-theme-light .image-name,
+body.pf-v5-theme-light .image-name {
+  color: #111827;
+}
+
+html[data-theme="light"] .logs-content .loading,
+body[data-theme="light"] .logs-content .loading,
+html[data-pf-theme="light"] .logs-content .loading,
+body[data-pf-theme="light"] .logs-content .loading,
+html.theme-light .logs-content .loading,
+body.theme-light .logs-content .loading,
+html.pf-v5-theme-light .logs-content .loading,
+body.pf-v5-theme-light .logs-content .loading {
+  background: #f8fafc;
+}
+
+html[data-theme="light"] .logs-content .error,
+body[data-theme="light"] .logs-content .error,
+html[data-pf-theme="light"] .logs-content .error,
+body[data-pf-theme="light"] .logs-content .error,
+html.theme-light .logs-content .error,
+body.theme-light .logs-content .error,
+html.pf-v5-theme-light .logs-content .error,
+body.pf-v5-theme-light .logs-content .error {
+  background: #fff1f2;
+  border-left-color: #ef4444;
+}
+
+html[data-theme="light"] #modal-terminal-input,
+body[data-theme="light"] #modal-terminal-input,
+html[data-pf-theme="light"] #modal-terminal-input,
+body[data-pf-theme="light"] #modal-terminal-input,
+html.theme-light #modal-terminal-input,
+body.theme-light #modal-terminal-input,
+html.pf-v5-theme-light #modal-terminal-input,
+body.pf-v5-theme-light #modal-terminal-input {
+  background: #ffffff;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+html[data-theme="light"] .terminal-tip,
+body[data-theme="light"] .terminal-tip,
+html[data-pf-theme="light"] .terminal-tip,
+body[data-pf-theme="light"] .terminal-tip,
+html.theme-light .terminal-tip,
+body.theme-light .terminal-tip,
+html.pf-v5-theme-light .terminal-tip,
+body.pf-v5-theme-light .terminal-tip {
+  color: #4b5563;
+  border-top-color: #d1d5db;
+}
+
+html[data-theme="light"] #terminal-panel,
+body[data-theme="light"] #terminal-panel,
+html[data-pf-theme="light"] #terminal-panel,
+body[data-pf-theme="light"] #terminal-panel,
+html.theme-light #terminal-panel,
+body.theme-light #terminal-panel,
+html.pf-v5-theme-light #terminal-panel,
+body.pf-v5-theme-light #terminal-panel {
+  background: #e5e7eb;
+}
+
+/* Fallback for "Default" theme when Cockpit does not emit explicit markers */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]):not([data-pf-theme="dark"]):not(.theme-dark):not(.pf-v5-theme-dark) body {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  html:not([data-theme="dark"]):not([data-pf-theme="dark"]):not(.theme-dark):not(.pf-v5-theme-dark) .container-card {
+    background: #ffffff;
+  }
 }
