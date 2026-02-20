@@ -1,6 +1,7 @@
 name: Pages build
 
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches: [main]
@@ -33,8 +34,6 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # This is the "default" GitHub Pages build pipeline (Jekyll).
-      # It will produce the site output as a Pages artifact.
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
