@@ -109,3 +109,7 @@ jobs:
           git add -f docs/dists/stable docs/yum/stable docs/.nojekyll
           git commit -m "Regenerate APT+RPM repo metadata [skip ci]" || echo "No changes to commit"
           git push origin "HEAD:${BRANCH_NAME}"
+          
+  run-pages-build:
+    needs: build-repo-metadata
+    uses: ./.github/workflows/pages-build.yml
