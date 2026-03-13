@@ -31,7 +31,7 @@
   
 **Automatic (recommended)**
 ```shell
-echo "deb [trusted=yes] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
+echo "deb [trusted=yes arch=all] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
   | sudo tee /etc/apt/sources.list.d/cockpit-dockermanager.list
 
 sudo apt update
