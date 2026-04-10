@@ -1,3 +1,4 @@
+
 <h1 align="center">🐳 Cockpit Docker Manager</h1>
   
 **Docker Manager** is a lightweight and intuitive utility designed to help you manage your Docker containers via a simplified interface. Whether you're a system administrator, developer, or DevOps engineer, DockerManager makes container visibility and management easier and more accessible.
