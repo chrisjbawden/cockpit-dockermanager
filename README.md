@@ -1,4 +1,3 @@
-
 <h1 align="center">🐳 Cockpit Docker Manager</h1>
   
 **Docker Manager** is a lightweight and intuitive utility designed to help you manage your Docker containers via a simplified interface. Whether you're a system administrator, developer, or DevOps engineer, DockerManager makes container visibility and management easier and more accessible.
@@ -20,25 +19,119 @@
 
 ## 🛠️ Installation
 
-### Ubuntu:
+### Ubuntu/DEB:
+
+<dl>
+  <dd>
+   <dd>
+    <dd>
+       <dd>
+    <dd>
+  
+**Automatic (recommended)**
+```shell
+echo "deb [trusted=yes arch=all] https://chrisjbawden.github.io/cockpit-dockermanager stable main" \
+  | sudo tee /etc/apt/sources.list.d/cockpit-dockermanager.list
+
+sudo apt update
+sudo apt install dockermanager
+```
+<details>
+  <summary><strong>Manual</strong></summary>
 
 ```shell
 curl -L -o dockermanager.deb https://github.com/chrisjbawden/cockpit-dockermanager/releases/download/latest/dockermanager.deb && sudo dpkg -i dockermanager.deb
 ```
+</details>
+  
+  </dd>
+    </dd>
+      </dd>
+  </dd>
+  </dd>
+<dl>
+  
 ### Fedora/RHEL:
+
+<dl>
+  <dd>
+   <dd>
+    <dd>
+       <dd>
+    <dd>
+
+**Automatic (recommended)**
+
+```shell
+sudo tee /etc/yum.repos.d/cockpit-dockermanager.repo <<'EOF'
+[cockpit-dockermanager]
+name=Cockpit Docker Manager
+baseurl=https://chrisjbawden.github.io/cockpit-dockermanager/yum/stable/
+enabled=1
+gpgcheck=0
+metadata_expire=0
+EOF
+
+sudo yum install -y dockermanager
+```
+
+<details>
+  <summary><strong>Manual</strong></summary>
+
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-fedora.sh | bash
 ```
-### SLES/OpenSUSE:
+</details>
+
+  </dd>
+    </dd>
+      </dd>
+  </dd>
+  </dd>
+<dl>
+
+### SUSE (openSUSE / SLES):
+
+<dl>
+  <dd>
+   <dd>
+    <dd>
+       <dd>
+    <dd>
+
+**Manual (recommended)**
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/amprince01/cockpit-dockermanager/main/install-suse.sh | bash
 ```
 
+  </dd>
+    </dd>
+      </dd>
+  </dd>
+  </dd>
+</dl>
+
 ---
 
 ### Changelog
+
+#### v1.0.8
+- Toast notification modified
+- Integrated cockpit superuser mechanism for permission management
+- Theme support added
+
+#### v1.0.7.3
+- Bugfix - start/stop buttons in container dialog/pane
+- Bugfix - toast notification styling
+- Change to error handling - includes cli std output for torubleshooting
+- 'Auto Prune' adjusted to remove all unused images (instead of only dangling)
+
+#### v1.0.7.2
+- Bugfix - stats
+- Banner converted to toast notifications
+- Bugfix - prunning button
 
 #### v1.0.7
 
@@ -46,23 +139,7 @@ curl -sSL https://raw.githubusercontent.com/amprince01/cockpit-dockermanager/mai
 - Minor UI changes
 - Added ability to delete containers
 
-#### v1.0.6
 
-- Added functionality to pin/fix header
-- Added functionality to delete images
-- Resource stats update pushed to background
-
-#### v1.0.5
-
-- Added "sort-by" functionality
-- Added search functionality
-- Fixed terminal button
-- Modified refresh interval to 3mins
-
-#### v1.0.4
-
-- Added Real time log, CPU/memory monitoring
-
-#### v1.0.3
-
-- In window terminal functionality implemented
+<div align="center">
+  <a href="https://chrisjbawden.github.io/cockpit-dockermanager/index.html" target="_blank" rel="noopener noreferrer">...</a>
+</div>
