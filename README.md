@@ -101,10 +101,10 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
        <dd>
     <dd>
 
-**Manual (recommended)**
+**Manual**
 
 ```shell
-curl -sSL https://raw.githubusercontent.com/amprince01/cockpit-dockermanager/main/install-suse.sh | bash
+curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-suse.sh | bash
 ```
 
   </dd>
