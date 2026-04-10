@@ -31,7 +31,7 @@ if ! command -v ar &> /dev/null; then
 fi
 
 # Create temp directory
-TEMP_DIR=$(mktemp -d)
+TEMP_DIR=$(mktemp -d) || echo "could not find or run mktemp"; return 1
 cd "$TEMP_DIR"
 
 # Download and extract
@@ -57,7 +57,6 @@ echo "Restarting cockpit..."
 sudo systemctl restart cockpit
 
 # Cleanup
-cd /
 rm -rf "$TEMP_DIR"
 
 echo "Done."

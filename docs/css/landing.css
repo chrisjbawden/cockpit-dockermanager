@@ -1,4 +1,13 @@
 /* nav specialized to landing page */
+.changelog-toggle{
+  display: block;
+  margin: 32px auto 0; /* centres the button */
+}
+
+.changelog-more.is-hidden{
+  display: none;
+}
+
 .logo {
   background: url('../docker.png') no-repeat;
   background-size: contain;

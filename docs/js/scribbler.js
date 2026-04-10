@@ -1,3 +1,61 @@
+
+(function () {
+  function addCopyButtons() {
+    document.querySelectorAll('pre > code').forEach(function (codeEl) {
+      var pre = codeEl.parentElement;
+      if (!pre || pre.querySelector('.copy-btn')) return;
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+
+      btn.addEventListener('click', async function () {
+        try {
+          await navigator.clipboard.writeText(codeEl.textContent);
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+        } catch (e) {
+          // Fallback for older browsers
+          var range = document.createRange();
+          range.selectNodeContents(codeEl);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.execCommand('copy');
+          sel.removeAllRanges();
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+        }
+      });
+
+      pre.appendChild(btn);
+    });
+  }
+
+  // run once on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addCopyButtons);
+  } else {
+    addCopyButtons();
+  }
+})();
+
+
+(function () {
+  const btn = document.getElementById('changelogToggle');
+  const panel = document.getElementById('changelogMore');
+  if (!btn || !panel) return;
+
+  btn.addEventListener('click', function () {
+    const isHidden = panel.classList.toggle('is-hidden');
+    const expanded = !isHidden;
+
+    btn.setAttribute('aria-expanded', String(expanded));
+    btn.textContent = expanded ? 'Show less …' : 'Show more …';
+  });
+})();
+
 // utilities
 var get = function (selector, scope) {
   scope = scope ? scope : document;
