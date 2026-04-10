@@ -92,6 +92,28 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
   </dd>
 <dl>
 
+### SUSE (openSUSE / SLES):
+
+<dl>
+  <dd>
+   <dd>
+    <dd>
+       <dd>
+    <dd>
+
+**Manual**
+
+```shell
+curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-suse.sh | bash
+```
+
+  </dd>
+    </dd>
+      </dd>
+  </dd>
+  </dd>
+</dl>
+
 ---
 
 ### Changelog
