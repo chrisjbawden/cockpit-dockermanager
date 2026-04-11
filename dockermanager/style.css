@@ -427,6 +427,7 @@ html[data-theme="light"] #version-stamp a {
 ================================ */
 .container-stats {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-top: 8px;
   font-size: 0.85em;
