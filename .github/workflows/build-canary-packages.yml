@@ -33,15 +33,20 @@ jobs:
 
       - name: Prepare DEB packaging structure
         run: |
+          set -euo pipefail
+
           rm -rf "$BUILD_DIR"
           mkdir -p "$BUILD_DIR/DEBIAN"
           mkdir -p "$BUILD_DIR/usr/share/cockpit/$PAYLOAD_DIR_NAME"
+
           cp -rT "dockermanager" "$BUILD_DIR/usr/share/cockpit/$PAYLOAD_DIR_NAME"
 
       - name: Generate DEB control file
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
+          set -euo pipefail
+
           cat > "$BUILD_DIR/DEBIAN/control" <<EOF
           Package: $PKG_NAME
           Version: $VERSION
@@ -62,14 +67,17 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
-          dpkg-deb --build --root-owner-group "$BUILD_DIR" \
-            "${PKG_NAME}_${VERSION}_all.deb"
+          set -euo pipefail
+
+          dpkg-deb --build --root-owner-group "$BUILD_DIR" "${PKG_NAME}_${VERSION}_all.deb"
 
           cp "${PKG_NAME}_${VERSION}_all.deb" "${PKG_NAME}-${VERSION}.deb"
           cp "${PKG_NAME}_${VERSION}_all.deb" "${PKG_NAME}.deb"
 
       - name: Install RPM build tools
         run: |
+          set -euo pipefail
+
           sudo apt-get update
           sudo apt-get install -y rpm
 
@@ -77,7 +85,11 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
+          set -euo pipefail
+
+          rm -rf rpmbuild
           mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
           cp -rT dockermanager rpmbuild/SOURCES/dockermanager
           cp LICENSE rpmbuild/SOURCES/LICENSE
 
@@ -114,7 +126,13 @@ jobs:
           rpmbuild -bb rpmbuild/SPECS/dockermanager-canary.spec \
             --define "_topdir $PWD/rpmbuild"
 
-          RPM_PATH=$(ls rpmbuild/RPMS/noarch/dockermanager-canary-"$VERSION"-1*.rpm | head -n 1)
+          RPM_PATH="$(find rpmbuild/RPMS -type f -name "dockermanager-canary-${VERSION}-1*.rpm" | head -n 1)"
+
+          if [ -z "$RPM_PATH" ]; then
+            echo "RPM build output not found"
+            exit 1
+          fi
+
           cp "$RPM_PATH" "dockermanager-canary-${VERSION}.rpm"
           cp "$RPM_PATH" "dockermanager-canary.rpm"
 
@@ -122,42 +140,104 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           git fetch --tags origin
-          git tag -d "v${VERSION}-canary" || true
+
+          if git rev-parse "v${VERSION}-canary" >/dev/null 2>&1; then
+            git tag -d "v${VERSION}-canary"
+          fi
+
           git push origin ":refs/tags/v${VERSION}-canary" || true
-          git tag "v${VERSION}-canary"
+          git tag "v${VERSION}-canary" "${GITHUB_SHA}"
           git push origin "refs/tags/v${VERSION}-canary" --force
 
       - name: Move latest-canary tag to current commit
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           git fetch --tags origin
-          git tag -d latest-canary || true
+
+          if git rev-parse "latest-canary" >/dev/null 2>&1; then
+            git tag -d "latest-canary"
+          fi
+
           git push origin ":refs/tags/latest-canary" || true
-          git tag latest-canary
+          git tag "latest-canary" "${GITHUB_SHA}"
           git push origin "refs/tags/latest-canary" --force
 
-      - name: Create/Update versioned CANARY release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.event.inputs.version }}-canary
-          target_commitish: ${{ github.sha }}
-          name: "DockerManager CANARY v${{ github.event.inputs.version }}"
-          body: |
-            Automated CANARY release for DockerManager v${{ github.event.inputs.version }}.
-            Package name: dockermanager-canary
-          draft: false
-          prerelease: true
-          files: |
-            dockermanager-canary-${{ github.event.inputs.version }}.deb
-            dockermanager-canary-${{ github.event.inputs.version }}.rpm
+      - name: Delete any draft release for version tag
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
 
-      - name: Create/Update rolling latest-canary release
+          TAG="v${VERSION}-canary"
+
+          RELEASE_JSON="$(gh release list --limit 100 --json tagName,isDraft,id)"
+          RELEASE_ID="$(echo "$RELEASE_JSON" | jq -r ".[] | select(.tagName == \"$TAG\" and .isDraft == true) | .id" | head -n 1)"
+
+          if [ -n "${RELEASE_ID:-}" ] && [ "$RELEASE_ID" != "null" ]; then
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
+          fi
+
+      - name: Delete any draft release for latest-canary tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          TAG="latest-canary"
+
+          RELEASE_JSON="$(gh release list --limit 100 --json tagName,isDraft,id)"
+          RELEASE_ID="$(echo "$RELEASE_JSON" | jq -r ".[] | select(.tagName == \"$TAG\" and .isDraft == true) | .id" | head -n 1)"
+
+          if [ -n "${RELEASE_ID:-}" ] && [ "$RELEASE_ID" != "null" ]; then
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
+          fi
+
+      - name: Create or update versioned CANARY release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+
+          TAG="v${VERSION}-canary"
+          TITLE="DockerManager CANARY v${VERSION}"
+          NOTES="Automated CANARY release for DockerManager v${VERSION}.
+          Package name: dockermanager-canary"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "dockermanager-canary-${VERSION}.deb" \
+              "dockermanager-canary-${VERSION}.rpm" \
+              --clobber
+
+            gh release edit "$TAG" \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --prerelease \
+              --latest=false
+          else
+            gh release create "$TAG" \
+              "dockermanager-canary-${VERSION}.deb" \
+              "dockermanager-canary-${VERSION}.rpm" \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --prerelease \
+              --target "${GITHUB_SHA}" \
+              --latest=false
+          fi
+
+      - name: Create or update rolling latest-canary release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -169,20 +249,22 @@ jobs:
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" \
-              dockermanager-canary.deb \
-              dockermanager-canary.rpm \
+              "dockermanager-canary.deb" \
+              "dockermanager-canary.rpm" \
               --clobber
 
             gh release edit "$TAG" \
               --title "$TITLE" \
               --notes "$NOTES" \
-              --prerelease
+              --prerelease \
+              --latest=false
           else
             gh release create "$TAG" \
-              dockermanager-canary.deb \
-              dockermanager-canary.rpm \
+              "dockermanager-canary.deb" \
+              "dockermanager-canary.rpm" \
               --title "$TITLE" \
               --notes "$NOTES" \
               --prerelease \
-              --target "${GITHUB_SHA}"
+              --target "${GITHUB_SHA}" \
+              --latest=false
           fi
