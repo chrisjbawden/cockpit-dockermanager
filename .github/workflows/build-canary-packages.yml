@@ -172,37 +172,6 @@ jobs:
           git tag "latest-canary" "${GITHUB_SHA}"
           git push origin "refs/tags/latest-canary" --force
 
-      - name: Delete any draft release for version tag
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ github.event.inputs.version }}
-        run: |
-          set -euo pipefail
-
-          TAG="v${VERSION}-canary"
-
-          RELEASE_JSON="$(gh release list --limit 100 --json tagName,isDraft,id)"
-          RELEASE_ID="$(echo "$RELEASE_JSON" | jq -r ".[] | select(.tagName == \"$TAG\" and .isDraft == true) | .id" | head -n 1)"
-
-          if [ -n "${RELEASE_ID:-}" ] && [ "$RELEASE_ID" != "null" ]; then
-            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
-          fi
-
-      - name: Delete any draft release for latest-canary tag
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          TAG="latest-canary"
-
-          RELEASE_JSON="$(gh release list --limit 100 --json tagName,isDraft,id)"
-          RELEASE_ID="$(echo "$RELEASE_JSON" | jq -r ".[] | select(.tagName == \"$TAG\" and .isDraft == true) | .id" | head -n 1)"
-
-          if [ -n "${RELEASE_ID:-}" ] && [ "$RELEASE_ID" != "null" ]; then
-            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
-          fi
-
       - name: Create or update versioned CANARY release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -224,8 +193,7 @@ jobs:
             gh release edit "$TAG" \
               --title "$TITLE" \
               --notes "$NOTES" \
-              --prerelease \
-              --latest=false
+              --prerelease
           else
             gh release create "$TAG" \
               "dockermanager-canary-${VERSION}.deb" \
@@ -233,8 +201,7 @@ jobs:
               --title "$TITLE" \
               --notes "$NOTES" \
               --prerelease \
-              --target "${GITHUB_SHA}" \
-              --latest=false
+              --target "${GITHUB_SHA}"
           fi
 
       - name: Create or update rolling latest-canary release
@@ -256,8 +223,7 @@ jobs:
             gh release edit "$TAG" \
               --title "$TITLE" \
               --notes "$NOTES" \
-              --prerelease \
-              --latest=false
+              --prerelease
           else
             gh release create "$TAG" \
               "dockermanager-canary.deb" \
@@ -265,6 +231,5 @@ jobs:
               --title "$TITLE" \
               --notes "$NOTES" \
               --prerelease \
-              --target "${GITHUB_SHA}" \
-              --latest=false
+              --target "${GITHUB_SHA}"
           fi
