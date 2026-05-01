@@ -400,7 +400,10 @@ select::-ms-expand {
     width: 100%;
   }
 
-  /* Container cards: stack vertically on narrow screens */
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  /* Container cards: stack vertically on phones in portrait orientation */
   .container-card {
     flex-wrap: wrap;
     align-items: flex-start;
