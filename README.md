@@ -114,6 +114,46 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
   </dd>
 </dl>
 
+### Arch Linux (AUR):
+
+<dl>
+  <dd>
+   <dd>
+    <dd>
+       <dd>
+    <dd>
+
+**Automatic (Paru)**
+
+```shell
+paru cockpit-dockermanager-git
+```
+
+**Automatic (Yay)**
+
+```shell
+yay cockpit-dockermanager-git
+```
+
+<details>
+  <summary><strong>Manual</strong></summary>
+
+
+```shell
+git clone https://aur.archlinux.org/cockpit-dockermanager-git.git
+cd cockpit-dockermanager-git
+makepkg -si
+```
+</details>
+
+  </dd>
+    </dd>
+      </dd>
+  </dd>
+  </dd>
+<dl>
+
+
 ---
 
 ### Changelog
