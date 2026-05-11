@@ -123,16 +123,10 @@ curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/m
        <dd>
     <dd>
 
-**Automatic (Paru)**
+**Automatic (Paru or Yay)**
 
 ```shell
-paru cockpit-dockermanager-git
-```
-
-**Automatic (Yay)**
-
-```shell
-yay cockpit-dockermanager-git
+paru cockpit-dockermanager
 ```
 
 <details>
@@ -140,7 +134,7 @@ yay cockpit-dockermanager-git
 
 
 ```shell
-git clone https://aur.archlinux.org/cockpit-dockermanager-git.git
+git clone https://aur.archlinux.org/cockpit-dockermanager.git
 cd cockpit-dockermanager-git
 makepkg -si
 ```
