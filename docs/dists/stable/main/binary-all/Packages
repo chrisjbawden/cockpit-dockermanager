@@ -242,6 +242,23 @@ Description: Cockpit plugin – Docker Manager UI (CANARY channel)
 
 Package: dockermanager-canary
 Architecture: all
+Version: 1.0.8.2
+Priority: optional
+Section: admin
+Maintainer: Chris Bawden <chrisjbawden@outlook.com>
+Conflicts: dockermanager
+Replaces: dockermanager
+Filename: dists/stable/main/binary-all/dockermanager-canary-1.0.8.2.deb
+Size: 19510
+MD5sum: 33b0300c69777367e9496c7928be0df7
+SHA1: ad1cac16a597f5dd12a19857954984ea6fb53bf9
+SHA256: 82076b7ea4514ba7e3f65c16d154286ab8c31c48751d8663ce5a4a173c2ee4f0
+SHA512: d0cea3aaa672c1b16b2c3277427e65f17c8566d15121aa54999aae42795f998ba14cf40d5afc12e579546a786515a8351e3ee634dda67f38dc10554d45093106
+Description: Cockpit plugin – Docker Manager UI (CANARY channel)
+ Canary channel with latest changes for testing.
+
+Package: dockermanager-canary
+Architecture: all
 Version: 1.0.8
 Priority: optional
 Section: admin
