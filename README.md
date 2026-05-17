@@ -152,6 +152,10 @@ makepkg -si
 
 ### Changelog
 
+#### v1.0.8.2
+- Network and disk stats added
+- Mobile view styling added
+
 #### v1.0.8
 - Toast notification modified
 - Integrated cockpit superuser mechanism for permission management

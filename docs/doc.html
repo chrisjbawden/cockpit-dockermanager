@@ -132,7 +132,46 @@
                 <li>If Cockpit is already open, refresh your browser.</li>
               </ol>
             </details>
-        
+
+            <!-- SUSE -->
+            <h4>SUSE (openSUSE / SLES)</h4>
+            
+            <details>
+              <summary><strong>Manual</strong></summary>
+              <ol>
+                <li>Run the following in a terminal</li>
+                <pre><code class="bash">curl -sSL https://raw.githubusercontent.com/chrisjbawden/cockpit-dockermanager/main/install-suse.sh | bash</code></pre>
+            
+                <li>If Cockpit is already open, refresh your browser.</li>
+              </ol>
+            </details>
+            
+            <!-- Arch Linux -->
+            <h4>Arch Linux (AUR)</h4>
+            
+            <h5>Automatic (Paru or Yay)</h5>
+            <ol>
+              <li>Install from the AUR</li>
+              <pre><code class="bash">paru cockpit-dockermanager</code></pre>
+            
+              <li>If Cockpit is already open, refresh your browser.</li>
+            </ol>
+            
+            <details>
+              <summary><strong>Manual</strong></summary>
+              <ol>
+                <li>Clone the AUR package</li>
+                <pre><code class="bash">git clone https://aur.archlinux.org/cockpit-dockermanager.git</code></pre>
+            
+                <li>Build and install</li>
+                <pre><code class="bash">cd cockpit-dockermanager</code></pre>
+                <pre><code class="bash">makepkg -si</code></pre>
+            
+                <li>If Cockpit is already open, refresh your browser.</li>
+              </ol>
+            </details>
+
+            
           </div>
         </section>
 

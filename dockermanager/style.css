@@ -399,6 +399,29 @@ select::-ms-expand {
   #search-input {
     width: 100%;
   }
+
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  /* Container cards: stack vertically on phones in portrait orientation */
+  .container-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .container-info {
+    width: 100%;
+  }
+  .container-ports {
+    white-space: normal;
+    word-break: break-all;
+    margin-right: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-top: 6px;
+  }
+  .container-stats {
+    gap: 8px;
+  }
 }
 
 #version-stamp {
@@ -427,6 +450,7 @@ html[data-theme="light"] #version-stamp a {
 ================================ */
 .container-stats {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-top: 8px;
   font-size: 0.85em;
