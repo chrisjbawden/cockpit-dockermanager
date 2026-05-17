@@ -1,13 +1,13 @@
 Architectures: amd64 all
 Codename: stable
 Components: main
-Date: Sun, 17 May 2026 01:18:23 +0000
+Date: Sun, 17 May 2026 01:42:05 +0000
 Description: Minimal repo (binary-all hosted packages)
 Label: cockpit-dockermanager
 Origin: cockpit-dockermanager
 Suite: stable
 MD5Sum:
- 781f78a31b90a45049c73a3241d38326              225 Release
+ 637895e2a129fdf4d0bc529a7905fc7e              225 Release
  d41d8cd98f00b204e9800998ecf8427e                0 main/Contents-all
  7029066c27ac6f5ef18d660d5741979a               20 main/Contents-all.gz
  d41d8cd98f00b204e9800998ecf8427e                0 main/Contents-amd64
@@ -17,9 +17,9 @@ MD5Sum:
  d41d8cd98f00b204e9800998ecf8427e                0 main/Translation-en_US
  bbbf06a59b6bddc2ba26fa766a234111               35 main/Translation-en_US.gz
  76e7c7acf75a3ba488ce1db1fe8918a2            11821 main/binary-all/Packages
- 01f2f0b53c83dc05309ed1c23c730e6e             3775 main/binary-all/Packages.gz
+ 9a1add37d3d19e269a4bd85f6118896e             3775 main/binary-all/Packages.gz
  d41d8cd98f00b204e9800998ecf8427e                0 main/binary-amd64/Packages
- b971e9471556dfb92e0ab49ccc1781d5               29 main/binary-amd64/Packages.gz
+ 15c52e312c88de96de6d94a0fd7a58f8               29 main/binary-amd64/Packages.gz
  7029066c27ac6f5ef18d660d5741979a               20 main/dep11/Components-all.yml.gz
  7029066c27ac6f5ef18d660d5741979a               20 main/dep11/Components-amd64.yml.gz
  7029066c27ac6f5ef18d660d5741979a               20 main/dep11/icons-48x48.tar.gz
@@ -29,7 +29,7 @@ MD5Sum:
  7029066c27ac6f5ef18d660d5741979a               20 main/i18n/Translation-en_AU.gz
  7029066c27ac6f5ef18d660d5741979a               20 main/i18n/Translation-en_US.gz
 SHA1:
- 3cbe521cafae7ae6f86784e3c13be3d1b7ff5811              225 Release
+ 26d44caf5864aa687a801386f5fa032da2fdf0a9              225 Release
  da39a3ee5e6b4b0d3255bfef95601890afd80709                0 main/Contents-all
  46c6643f07aa7f6bfe7118de926b86defc5087c4               20 main/Contents-all.gz
  da39a3ee5e6b4b0d3255bfef95601890afd80709                0 main/Contents-amd64
@@ -39,9 +39,9 @@ SHA1:
  da39a3ee5e6b4b0d3255bfef95601890afd80709                0 main/Translation-en_US
  af057f68d3b3f2a877c3c1e1393511a6a1a66d4c               35 main/Translation-en_US.gz
  b1d63371e23f31d8806663e71e965f2ce6a23f1d            11821 main/binary-all/Packages
- de63b316629a4b56a30e39f975eef8b26d4edd56             3775 main/binary-all/Packages.gz
+ c2ce1a1f3e348ac375fcf954f0b6e96627305fd8             3775 main/binary-all/Packages.gz
  da39a3ee5e6b4b0d3255bfef95601890afd80709                0 main/binary-amd64/Packages
- e5530b36a4e538c674b4227bed0548b6a6b97e93               29 main/binary-amd64/Packages.gz
+ a24ab9cc225cc318a27e881be1305c2a5825fd1a               29 main/binary-amd64/Packages.gz
  46c6643f07aa7f6bfe7118de926b86defc5087c4               20 main/dep11/Components-all.yml.gz
  46c6643f07aa7f6bfe7118de926b86defc5087c4               20 main/dep11/Components-amd64.yml.gz
  46c6643f07aa7f6bfe7118de926b86defc5087c4               20 main/dep11/icons-48x48.tar.gz
@@ -51,7 +51,7 @@ SHA1:
  46c6643f07aa7f6bfe7118de926b86defc5087c4               20 main/i18n/Translation-en_AU.gz
  46c6643f07aa7f6bfe7118de926b86defc5087c4               20 main/i18n/Translation-en_US.gz
 SHA256:
- dc1220876a9c6760d77b020d6d152f9977a474b9ed19555fcf7252dbaf9b395c              225 Release
+ 15dfa2b5264cfd447fc1c3b0be2bee0fa7a8aaf23c1f9b7e7dc46a220b0e4aba              225 Release
  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855                0 main/Contents-all
  59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2               20 main/Contents-all.gz
  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855                0 main/Contents-amd64
@@ -61,9 +61,9 @@ SHA256:
  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855                0 main/Translation-en_US
  886806a6d1995d46c00904187e8b1fd867ca06b85aaa82409c869b7d1f5e8d29               35 main/Translation-en_US.gz
  d30d3c1705d5a1b68cf9b0df483039713bb6bd4b93f752a1a97455f57b3376a4            11821 main/binary-all/Packages
- 2a7135d39dc9b3430d526558b70f3670e34b98e88e144183754e0e607098d125             3775 main/binary-all/Packages.gz
+ 962b025703babd055668e19601e90a43488f7d63bd4cbde081efff4aad385eb6             3775 main/binary-all/Packages.gz
  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855                0 main/binary-amd64/Packages
- e4c38b02c5a3756d8cc8ca0ff6b44727ae597b52f483e7cff80c582653be7fc0               29 main/binary-amd64/Packages.gz
+ 77630d3a7d937d3914ab29c1978eb69d7b8af7b8827a01f87703a171bcacdb40               29 main/binary-amd64/Packages.gz
  59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2               20 main/dep11/Components-all.yml.gz
  59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2               20 main/dep11/Components-amd64.yml.gz
  59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2               20 main/dep11/icons-48x48.tar.gz
@@ -73,7 +73,7 @@ SHA256:
  59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2               20 main/i18n/Translation-en_AU.gz
  59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2               20 main/i18n/Translation-en_US.gz
 SHA512:
- 37cf25aeb2fb363c9aa3452f837b9c86338167a1bdebaedd4cd49421c14cf184a728b6e737ceffb55815425823e5262cd42f3a956fe11f4e8fe5c04e57471ae8              225 Release
+ 348db8fc65300dddfba4717f28ac099e00457a81a82520ffaaf911baa7d343b79cf4758292a7d6b9009692f22beb18576e34d3d59d7c739f4ebc554caf3eb4b6              225 Release
  cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e                0 main/Contents-all
  7e8e93f4a89ce7fae011403e14a1d53544c6e6f6b6010d61129dc27937806d2b03802610d7999eab33a4c36b0f9e001d9d76001b8354087634c1aa9c740c536f               20 main/Contents-all.gz
  cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e                0 main/Contents-amd64
@@ -83,9 +83,9 @@ SHA512:
  cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e                0 main/Translation-en_US
  4ff76680c6fcf71ba643174ef10113ea4d09b25603a724e413b372e82c28920ea5a663dfd2e307828cc743490d0501bd7da4c05a3c8bd67000b59b2e71bc5550               35 main/Translation-en_US.gz
  d663077e146c1a510450a06e74093f72b675b0dd44c3fd2e1dd5a8b569c8a08f2163b7f3da15d340966a12755dc9bdf4b38ae4ee76faf725cdf2a5bc17ffbf88            11821 main/binary-all/Packages
- ecde5465219580a0510b406a6d44881e45246d9468d09f5d06d9151b6858ed7df282241c1b4b198e76fbc8abc2b0bb6994456a5f46ce3516b5ca2433ea297fa2             3775 main/binary-all/Packages.gz
+ b9d238544d026a19d98286733bc73954498450afb7f92ea6295625101c45d38f548fa7e85be22507d6e601e1775c6cc40cd4e5195a0668b858e0a8c69f74d442             3775 main/binary-all/Packages.gz
  cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e                0 main/binary-amd64/Packages
- afcfdfa78654fbf154b847573a47a0e11500c52904c576176b1a9cf34d34bf5504d88f547b06a1d15a594837397305d2c5322f5521f64843a1aace5bd9cd091f               29 main/binary-amd64/Packages.gz
+ 10f78dcd30215bc05069b7695a0dd1bdf7da8b77e70189e3e2f9b5915f48c7a39b5671d41c4616ee088f2b3d58594c73795dff0c89d4846257825ee0f9749e5d               29 main/binary-amd64/Packages.gz
  7e8e93f4a89ce7fae011403e14a1d53544c6e6f6b6010d61129dc27937806d2b03802610d7999eab33a4c36b0f9e001d9d76001b8354087634c1aa9c740c536f               20 main/dep11/Components-all.yml.gz
  7e8e93f4a89ce7fae011403e14a1d53544c6e6f6b6010d61129dc27937806d2b03802610d7999eab33a4c36b0f9e001d9d76001b8354087634c1aa9c740c536f               20 main/dep11/Components-amd64.yml.gz
  7e8e93f4a89ce7fae011403e14a1d53544c6e6f6b6010d61129dc27937806d2b03802610d7999eab33a4c36b0f9e001d9d76001b8354087634c1aa9c740c536f               20 main/dep11/icons-48x48.tar.gz
