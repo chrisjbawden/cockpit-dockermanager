@@ -609,12 +609,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadContainerStats(){
-    return spawnDocker(["docker","ps","-a","--format","{{.ID}}\t{{.Names}}"])
+    return spawnDocker(["docker","ps","-a","--format","{{.ID}}\t{{.Names}}\t{{.Networks}}"])
     .then(out => {
       const id2name = {};
+      const name2net = {};
       (out.trim() ? out.trim().split("\n") : []).forEach(line => {
         if (!line) return;
-        const [id, nameRaw] = line.split("\t");
+        const [id, nameRaw, networks] = line.split("\t");
         if (!id || !nameRaw) return;
 
         const trimmedName = nameRaw.trim();
@@ -622,6 +623,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // This is the name used in the UI ({{.Names}})
         const displayName = trimmedName;
+
+        // Track network mode per container name
+        const netStr = (networks || '').trim().toLowerCase();
+        name2net[displayName] = netStr;
 
         // Map full ID and short ID → display name
         id2name[id] = displayName;
@@ -640,12 +645,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      return spawnDocker(["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"])
+      return spawnDocker(["docker","stats","--no-stream","--format","{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}"])
       .then(stats => {
         containerStats = {};
         (stats.trim() ? stats.trim().split("\n") : []).forEach(line => {
           if (!line) return;
-          const [cidRaw, cpu, memUsage, memPerc] = line.split("\t");
+          const [cidRaw, cpu, memUsage, memPerc, netIO, blockIO] = line.split("\t");
           if (!cidRaw) return;
 
           const cid = cidRaw.trim();
@@ -668,7 +673,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!name) return;
 
           const used = (memUsage || '').split(' / ')[0];
-          containerStats[name] = { cpu, memUsage: used, memPerc };
+          // Docker reports 0B / 0B for NetIO when using host network mode
+          const isHostNet = (name2net[name] || '').split(',').some(n => n.trim() === 'host');
+          containerStats[name] = { cpu, memUsage: used, memPerc, netIO: netIO || '', blockIO: blockIO || '', isHostNet };
         });
       });
     })
@@ -1013,10 +1020,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const portsHTML = parsePorts(portsRaw);
         const stats = containerStats[name] || {};
         const pct = v => (typeof v==="string" && v.endsWith("%")) ? (Math.round(parseFloat(v))+"%") : v;
+        const netDisplay = stats.isHostNet ? 'N/A (host)' : (stats.netIO || 'N/A');
         const statsHTML = running && stats.cpu ? `
           <div class="container-stats">
             <div class="stat-item"><span class="stat-label">CPU:</span><span class="stat-value">${pct(stats.cpu)}</span></div>
             <div class="stat-item"><span class="stat-label">Memory:</span><span class="stat-value">${roundMemUsage(stats.memUsage)} (${pct(stats.memPerc)||'N/A'})</span></div>
+            <div class="stat-item"><span class="stat-label">Net I/O:</span><span class="stat-value">${netDisplay}</span></div>
+            <div class="stat-item"><span class="stat-label">Block I/O:</span><span class="stat-value">${stats.blockIO || 'N/A'}</span></div>
           </div>` : '<div class="container-stats"></div>';
         return `
           <div class="container-card ${running?"":"stopped"}">
@@ -1077,9 +1087,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const div = card.querySelector('.container-stats');
         const running = !card.classList.contains('stopped');
         if (!div || !running || !stats.cpu) { if (div) div.innerHTML=''; return; }
+        const netDisp = stats.isHostNet ? 'N/A (host)' : (stats.netIO || 'N/A');
         div.innerHTML = `
           <div class="stat-item"><span class="stat-label">CPU:</span><span class="stat-value">${stats.cpu}</span></div>
-          <div class="stat-item"><span class="stat-label">Memory:</span><span class="stat-value">${roundMemUsage(stats.memUsage)} (${stats.memPerc||'N/A'})</span></div>`;
+          <div class="stat-item"><span class="stat-label">Memory:</span><span class="stat-value">${roundMemUsage(stats.memUsage)} (${stats.memPerc||'N/A'})</span></div>
+          <div class="stat-item"><span class="stat-label">Net I/O:</span><span class="stat-value">${netDisp}</span></div>
+          <div class="stat-item"><span class="stat-label">Block I/O:</span><span class="stat-value">${stats.blockIO || 'N/A'}</span></div>`;
       });
     });
   }, 10000);
