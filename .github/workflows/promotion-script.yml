@@ -24,18 +24,19 @@ jobs:
             exit 1
           fi
 
-      - name: Create filtered branch from canary
+      - name: Create promotion branch with only dockermanager
         run: |
-          git fetch origin main
-          git checkout canary
+          git fetch origin
+
+          # Start from main
+          git checkout main
           git checkout -b promote-from-canary
 
-          git checkout origin/main -- \
-            docs/dists \
-            docs/yum \
-            .github/workflows \
-            LICENSE \
-            dockermanager.tar
+          # Bring only dockermanager from canary
+          git checkout origin/canary -- dockermanager/
 
-          git commit -m "Create promotion branch excluding selected paths"
+          # Commit changes
+          git commit -m "Promote dockermanager from canary"
+
+          # Push branch
           git push origin promote-from-canary
