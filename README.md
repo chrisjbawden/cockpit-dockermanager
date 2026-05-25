@@ -135,7 +135,7 @@ paru cockpit-dockermanager
 
 ```shell
 git clone https://aur.archlinux.org/cockpit-dockermanager.git
-cd cockpit-dockermanager-git
+cd cockpit-dockermanager
 makepkg -si
 ```
 </details>
