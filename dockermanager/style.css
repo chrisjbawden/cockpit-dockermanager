@@ -171,6 +171,15 @@ header {
   font-size: 0.9em;
   margin-top: 4px;
 }
+.health-status {
+  color: #aaa;
+}
+.health-status.healthy {
+  color: #22c55e;
+}
+.health-status.unhealthy {
+  color: #ef4444;
+}
 
 .container-ports {
   color: #ccc;

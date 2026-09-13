@@ -995,6 +995,14 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(error => { el.innerHTML = `<div class="error">Failed to load logs: ${escapeHtml(String(error))}</div>`; });
   }
 
+  // ------ colorize container status ------
+  function formatContainerStatus(status){
+    return escapeHtml(status).replace(/\((healthy|unhealthy|health:\s*starting)\)/i, (_, health) => {
+      const state = health.toLowerCase().replace(/^health:\s*/, '');
+      return `<span class="health-status ${state}">(${health})</span>`;
+    });
+  }
+
   // ------ list rendering ------
   function roundMemUsage(mem){
     if(!mem) return 'N/A';
@@ -1003,6 +1011,7 @@ document.addEventListener("DOMContentLoaded", () => {
     switch(u){case'B':mb=n/1e6;break;case'KB':mb=n/1e3;break;case'KIB':mb=n*1024/1e6;break;case'MB':mb=n;break;case'MIB':mb=n*1048576/1e6;break;case'GB':mb=n*1e3;break;case'GIB':mb=n*1073741824/1e6;break;default:mb=n}
     return `${Math.round(mb)} MB`;
   }
+
 
   function loadContainers(onDone, showLoading=false){
     if (showLoading) containerList.innerHTML = `<div class="loading">Loading containers...</div>`;
@@ -1032,7 +1041,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="container-card ${running?"":"stopped"}">
             <div class="container-info">
               <div class="container-name">${name}</div>
-              <div class="container-status">${statusRaw}</div>
+              <div class="container-status">${formatContainerStatus(statusRaw)}</div>
               ${statsHTML}
             </div>
             <div class="container-ports">${portsHTML}</div>
