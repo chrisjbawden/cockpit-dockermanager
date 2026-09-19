@@ -240,6 +240,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let manageLogProc = null;
   let manageLogToken = 0;
 
+  // Keep exactly ONE declaration for the healthchecks follower used in the Manage modal
+  let manageHealthchecksToken = 0;
+  let manageHealthchecksProc = null;
+  let manageHealthchecksInterval = null;
+  let manageHealthchecksLastResult = null;
+
   function spawnDocker(args, opts = {}) {
     return cockpit.spawn(args, { err: "message", superuser: "try", ...opts });
   }
@@ -684,7 +690,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // -------------- Manage modal (Logs / Terminal / Details + Delete) --------------
+  // ------ colorize container status ------
+  function formatContainerStatus(status){
+    return escapeHtml(status).replace(/\((healthy|unhealthy|health:\s*starting)\)/i, (_, health) => {
+      const state = health.toLowerCase().replace(/^health:\s*/, '');
+      return `<span class="health-status ${state}">(${health})</span>`;
+    });
+  }
+
+  // -------------- Manage modal (Logs / Healthchecks / Terminal / Details + Delete) --------------
 
   function openManageModal(containerName){
     const modal    = document.getElementById('manage-modal');
@@ -712,7 +726,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const msg = `Delete container "${containerName}"? This will stop it if running.`;
         if (!window.confirm(msg)) return;
         spawnDocker(["docker","rm","-f",containerName])
-          .then(()=>{ showBanner(`🗑️ Deleted ${containerName}`); stopManageLogStream(); stopModalTerminal(); modal.style.display='none'; reloadContainers(); })
+          .then(()=>{ showBanner(`🗑️ Deleted ${containerName}`); stopManageLogStream(); stopManageHealthchecksStream(); stopModalTerminal(); modal.style.display='none'; reloadContainers(); })
           .catch(err=>showBanner(`❌ Delete failed: ${escapeHtml(String(err))}`));
       };
     }
@@ -727,6 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (closeBtn){
       closeBtn.onclick = () => {
         stopManageLogStream();
+        stopManageHealthchecksStream();
         stopModalTerminal();
         modal.style.display = 'none';
       };
@@ -757,6 +772,9 @@ document.addEventListener("DOMContentLoaded", () => {
       followBtn.classList.add('active');
     }, 300);
 
+    // Healthchecks
+    initManageHealthchecks(containerName);
+    
     // Terminal (command-per-request)
     const openBtn = document.getElementById('open-terminal-btn');
     const shellSel = document.getElementById('shell-select');
@@ -886,6 +904,9 @@ document.addEventListener("DOMContentLoaded", () => {
       tabPanels.forEach(p=>p.classList.toggle('active', p.id===id));
       tabBtns.forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
       if (id !== 'tab-logs') stopManageLogStream();
+      // Healthchecks
+      if (id === 'tab-healthchecks' && document.getElementById('tabhealthchecks-follow-btn').textContent.includes('⏸️')) startManageHealthchecksStream(containerName);
+      if (id !== 'tab-healthchecks') stopManageHealthchecksStream();
     }
 
     function updateManageActionState(){
@@ -995,12 +1016,168 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(error => { el.innerHTML = `<div class="error">Failed to load logs: ${escapeHtml(String(error))}</div>`; });
   }
 
-  // ------ colorize container status ------
-  function formatContainerStatus(status){
-    return escapeHtml(status).replace(/\((healthy|unhealthy|health:\s*starting)\)/i, (_, health) => {
-      const state = health.toLowerCase().replace(/^health:\s*/, '');
-      return `<span class="health-status ${state}">(${health})</span>`;
-    });
+  // ------ Healthchecks in Manage modal ------
+  function initManageHealthchecks(containerName) {
+    const healthchecksFollowBtn = document.getElementById('tabhealthchecks-follow-btn');
+    const healthchecksContent = document.getElementById('tabhealthchecks-content');
+
+    manageHealthchecksLastResult = null;
+    
+    spawnDocker(["docker", "inspect", "--format", "{{json .}}", containerName])
+      .then(output => { 
+        const inspectedContainer = JSON.parse(output);
+        const healthcheckConfig = inspectedContainer?.Config?.Healthcheck;
+        if (!healthcheckConfig) {
+          manageHealthchecksInterval = null;
+          healthchecksContent.innerHTML = `<div class="error">No healthcheck configured.</div>`;
+        } else {
+          manageHealthchecksInterval = Number(healthcheckConfig?.Interval) / 1000000;
+          healthchecksContent.innerHTML = `<div class="loading">Loading healthchecks...</div>`;
+        }
+      })
+      .catch(error => {
+        manageHealthchecksInterval = null;
+        healthchecksContent.innerHTML = `<div class="error">Failed to load healthchecks: ${escapeHtml(String(error))}</div>`;
+      })
+      .finally(() => {
+        if (!manageHealthchecksInterval) {
+          healthchecksFollowBtn.textContent='▶️ Follow';
+          healthchecksFollowBtn.classList.remove('active');
+          healthchecksFollowBtn.disabled = true;
+        } else {
+          healthchecksFollowBtn.textContent='⏸️ Stop';
+          healthchecksFollowBtn.classList.add('active');
+          healthchecksFollowBtn.disabled = false;
+          healthchecksFollowBtn.onclick = () => {
+            const following = healthchecksFollowBtn.textContent.includes('⏸️');
+            if (following){ stopManageHealthchecksStream(); healthchecksFollowBtn.textContent='▶️ Follow'; healthchecksFollowBtn.classList.remove('active');}
+            else { startManageHealthchecksStream(containerName); healthchecksFollowBtn.textContent='⏸️ Stop'; healthchecksFollowBtn.classList.add('active'); }
+          };
+        }
+      });
+  }
+  function startManageHealthchecksStream(containerName) {
+    if (!manageHealthchecksInterval) return;
+    stopManageHealthchecksStream({ keepToken: true });
+    const token = ++manageHealthchecksToken;
+    fetchHealthchecks(containerName, token);
+  }
+  function fetchHealthchecks(containerName, token) {
+    const generateHash = (string) => {
+      let hash = 0;
+      for (const char of string) {
+        hash = (hash << 5) - hash + char.charCodeAt(0);
+        hash |= 0;
+      }
+      return String(hash);
+    };
+
+    const renderHealthcheck = (healthcheck) => {
+      const statusClass = Number(healthcheck?.ExitCode) === 0 ? 'healthy' : 'unhealthy';
+      const status = statusClass === 'healthy' ? 'Healthy' : 'Unhealthy';
+      let timestamp = new Date(healthcheck?.End || healthcheck?.Start);
+      timestamp = Number.isNaN(timestamp.getTime()) ? String(timestamp) : timestamp.toLocaleString();
+      const id = `healthcheck-${generateHash(`${healthcheck.Start || ''}|${healthcheck.End || ''}`)}`;
+      const output = (String(healthcheck?.Output || '')).replace(/^(?:[ \t]*\r?\n)+/, '').replace(/(?:\r?\n[ \t]*)+$/, '');
+      const summary = `<span class="healthcheck-status health-status ${statusClass}">${status}</span><time class="healthcheck-timestamp">${escapeHtml(timestamp)}</time>`;
+  
+      if (!output) {
+        return `<div class="healthcheck-card ${statusClass}" id="${id}"><div class="healthcheck-summary">${summary}</div></div>`;
+      } else {
+        const style = { color: '', bold: false };
+        const sgrPattern = /\u001b\[([0-9;]*)m/g;
+        let outputHTML = '';
+        let offset = 0;
+        let match;
+
+        const appendText = text => {
+          if (!text) return;
+          const escapedText = escapeHtml(text.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, ''));
+          if (!escapedText) return;
+          const className = [style.color, style.bold ? 'ansi-bold' : ''].filter(Boolean).join(' ');
+          outputHTML += className ? `<span class="${className}">${escapedText}</span>` : escapedText;
+        };
+
+        while ((match = sgrPattern.exec(output)) !== null) {
+          appendText(output.slice(offset, match.index));
+          const codes = match[1] ? match[1].split(';') : ['0'];
+          codes.forEach(code => {
+            const value = Number(code || 0);
+            if (value === 0) {
+              style.color = '';
+              style.bold = false;
+            } else if (value === 1) {
+              style.bold = true;
+            } else if (value === 22) {
+              style.bold = false;
+            } else if (value === 39) {
+              style.color = '';
+            } else if ((value >= 30 && value <= 37) || (value >= 90 && value <= 97)) {
+              style.color = `ansi-fg-${value}`;
+            }
+          });
+          offset = sgrPattern.lastIndex;
+        }
+        appendText(output.slice(offset));
+
+        return `<details class="healthcheck-card ${statusClass}" id="${id}"><summary class="healthcheck-summary">${summary}</summary><pre class="healthcheck-output">${outputHTML}</pre></details>`;
+      }
+    };
+
+    const healthchecksContent = document.getElementById('tabhealthchecks-content');
+    
+    if (token !== manageHealthchecksToken) return;
+    return spawnDocker(["docker", "inspect", "--format", "{{json .State}}", containerName])
+      .then(rawOutput => {
+        if (token !== manageHealthchecksToken) return;
+        const output = String(rawOutput).trim();
+        const state = (output && output !== "null") ? JSON.parse(output) : {};
+        const healthchecks = state.Health?.Log || [];
+        let delay = 0;
+        if (healthchecks.length > 0) {
+          const latestResult = `${healthchecks[healthchecks.length - 1].Start || ''}|${healthchecks[healthchecks.length - 1].End || ''}`;
+          if (latestResult !== manageHealthchecksLastResult) {
+            const currentHealthcheckHashes = new Set(healthchecks.map(healthcheck => generateHash(`${healthcheck.Start || ''}|${healthcheck.End || ''}`)));
+            const renderedHealthcheckHashes = new Set(Array.from(document.querySelectorAll('.healthcheck-card')).map(card => card.id.replace('healthcheck-', '')));
+            const healtchecksToBeUnrendered = Array.from(renderedHealthcheckHashes).filter(hash => !currentHealthcheckHashes.has(hash));
+            const healtchecksToBeRendered = Array.from(currentHealthcheckHashes).filter(hash => !renderedHealthcheckHashes.has(hash));
+            if (manageHealthchecksLastResult === null) {
+              healthchecksContent.innerHTML = '<div class="healthcheck-list"></div>';
+            }
+            for (const hash of healtchecksToBeUnrendered) {
+              const card = document.getElementById(`healthcheck-${hash}`);
+              if (card) card.remove();
+            }
+            for (const hash of healtchecksToBeRendered) {
+              const healthcheck = healthchecks.find(hc => generateHash(`${hc.Start || ''}|${hc.End || ''}`) === hash);
+              if (healthcheck) {
+                const cardHTML = renderHealthcheck(healthcheck);
+                healthchecksContent.querySelector('.healthcheck-list').insertAdjacentHTML('afterbegin', cardHTML);
+              }
+            }
+            manageHealthchecksLastResult = latestResult;
+            const lastLogEnd = new Date(healthchecks[healthchecks.length - 1].End).getTime();
+            delay = (lastLogEnd + manageHealthchecksInterval) - Date.now();
+          }
+        } else {
+          const startedAt = new Date(state.StartedAt).getTime();
+          delay = (startedAt + manageHealthchecksInterval) - Date.now();
+        }
+        delay = Math.max(1000, delay);
+        manageHealthchecksProc = setTimeout(() => fetchHealthchecks(containerName, token), delay);
+      })
+      .catch(error => {
+        if (token !== manageHealthchecksToken) return;
+        healthchecksContent.innerHTML = `<div class="error">Failed to load healthchecks: ${escapeHtml(String(error))}</div>`;
+        manageHealthchecksProc = setTimeout(() => fetchHealthchecks(containerName, token), manageHealthchecksInterval);
+      });
+  }
+  function stopManageHealthchecksStream(opts={}) {
+    if (manageHealthchecksProc) {
+      try { clearTimeout(manageHealthchecksProc); } catch(_) {}
+      manageHealthchecksProc = null;
+      if (!opts.keepToken) manageHealthchecksToken++;
+    }
   }
 
   // ------ list rendering ------

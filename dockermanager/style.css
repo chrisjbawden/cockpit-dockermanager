@@ -513,11 +513,14 @@ html[data-theme="light"] #version-stamp a {
   font-size: 1.2em;
 }
 
-.logs-controls {
+.logs-controls,
+.healthchecks-controls {
   display: flex;
   gap: 8px;
 }
-.logs-btn {
+
+.logs-btn,
+.healthchecks-btn {
   background: #007bff;
   border: none;
   color: #fff;
@@ -527,25 +530,38 @@ html[data-theme="light"] #version-stamp a {
   font-size: 0.85em;
   transition: 0.2s;
 }
-.logs-btn:hover {
+.logs-btn:hover,
+.healthchecks-btn:hover {
   background: #0056b3;
   transform: translateY(-1px);
 }
-.logs-btn.active {
+.logs-btn.active,
+.healthchecks-btn.active {
   background: #28a745;
   animation: pulse 1.5s infinite;
 }
-.logs-btn.danger {
+.logs-btn.danger,
+.healthchecks-btn.danger {
   background: #cc3333;
 }
-.logs-btn.danger:hover {
+.logs-btn.danger:hover,
+.healthchecks-btn.danger:hover {
   background: #a52a2a;
 }
-.logs-btn.terminal-open {
+.logs-btn.terminal-open,
+.healthchecks-btn.terminal-open {
   background: #cc3333;
 }
-.logs-btn.terminal-open:hover {
+.logs-btn.terminal-open:hover,
+.healthchecks-btn.terminal-open:hover {
   background: #a52a2a;
+}
+.logs-btn:disabled,
+.healthchecks-btn:disabled {
+  background: #555;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
 }
 
 @keyframes pulse {
@@ -613,7 +629,8 @@ html[data-theme="light"] #version-stamp a {
 /* ================================
    Logs Content
 ================================ */
-.logs-content {
+.logs-content, 
+.healthchecks-content {
   flex: 1;
   padding: 16px;
   background: #1a1a1a;
@@ -624,19 +641,22 @@ html[data-theme="light"] #version-stamp a {
   border-radius: 0 0 8px 8px;
   min-height: 0;
 }
-.logs-content pre {
+.logs-content pre,
+.healthchecks-content pre {
   margin: 0;
   color: #e0e0e0;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
-.logs-content .loading {
+.logs-content .loading,
+.healthchecks-content .loading {
   color: #4fa9ff;
   text-align: center;
   padding: 20px;
   font-family: system-ui, sans-serif;
 }
-.logs-content .error {
+.logs-content .error,
+.healthchecks-content .error {
   color: #ff6b6b;
   background: #2c1a1a;
   padding: 12px;
@@ -644,6 +664,68 @@ html[data-theme="light"] #version-stamp a {
   border-left: 4px solid #ff6b6b;
   font-family: system-ui, sans-serif;
 }
+
+.healthcheck-list {
+  display: grid;
+  gap: 8px;
+}
+.healthcheck-card {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  border-left: 4px solid #aaa;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.healthcheck-card.healthy {
+  border-left-color: #22c55e;
+}
+.healthcheck-card.unhealthy {
+  border-left-color: #ef4444;
+}
+.healthcheck-summary {
+  padding: 12px;
+}
+summary.healthcheck-summary {
+  cursor: pointer;
+}
+.healthcheck-status {
+  font-weight: 700;
+}
+.healthcheck-timestamp {
+  float: right;
+  color: #aaa;
+}
+.healthcheck-output {
+  margin: 0;
+  padding: 12px 16px;
+  color: #e0e0e0;
+  background: #202020;
+  border-top: 1px solid #444;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.healthcheck-output .ansi-bold {
+  font-weight: 700;
+}
+.healthcheck-output .ansi-fg-30 { color: #6b7280; }
+.healthcheck-output .ansi-fg-31 { color: #ef4444; }
+.healthcheck-output .ansi-fg-32 { color: #22c55e; }
+.healthcheck-output .ansi-fg-33 { color: #facc15; }
+.healthcheck-output .ansi-fg-34 { color: #60a5fa; }
+.healthcheck-output .ansi-fg-35 { color: #e879f9; }
+.healthcheck-output .ansi-fg-36 { color: #22d3ee; }
+.healthcheck-output .ansi-fg-37 { color: #f8fafc; }
+.healthcheck-output .ansi-fg-90 { color: #9ca3af; }
+.healthcheck-output .ansi-fg-91 { color: #f87171; }
+.healthcheck-output .ansi-fg-92 { color: #4ade80; }
+.healthcheck-output .ansi-fg-93 { color: #fde047; }
+.healthcheck-output .ansi-fg-94 { color: #93c5fd; }
+.healthcheck-output .ansi-fg-95 { color: #f0abfc; }
+.healthcheck-output .ansi-fg-96 { color: #67e8f9; }
+.healthcheck-output .ansi-fg-97 { color: #ffffff; }
 
 /* ================================
    Modal Terminal
@@ -1175,6 +1257,14 @@ html.theme-light .logs-content,
 body.theme-light .logs-content,
 html.pf-v5-theme-light .logs-content,
 body.pf-v5-theme-light .logs-content,
+html[data-theme="light"] .healthchecks-content,
+body[data-theme="light"] .healthchecks-content,
+html[data-pf-theme="light"] .healthchecks-content,
+body[data-pf-theme="light"] .healthchecks-content,
+html.theme-light .healthchecks-content,
+body.theme-light .healthchecks-content,
+html.pf-v5-theme-light .healthchecks-content,
+body.pf-v5-theme-light .healthchecks-content,
 html[data-theme="light"] .terminal-toolbar,
 body[data-theme="light"] .terminal-toolbar,
 html[data-pf-theme="light"] .terminal-toolbar,
@@ -1228,6 +1318,14 @@ html.theme-light .logs-content pre,
 body.theme-light .logs-content pre,
 html.pf-v5-theme-light .logs-content pre,
 body.pf-v5-theme-light .logs-content pre,
+html[data-theme="light"] .healthchecks-content pre,
+body[data-theme="light"] .healthchecks-content pre,
+html[data-pf-theme="light"] .healthchecks-content pre,
+body[data-pf-theme="light"] .healthchecks-content pre,
+html.theme-light .healthchecks-content pre,
+body.theme-light .healthchecks-content pre,
+html.pf-v5-theme-light .healthchecks-content pre,
+body.pf-v5-theme-light .healthchecks-content pre,
 html[data-theme="light"] .logs-modal-header h3,
 body[data-theme="light"] .logs-modal-header h3,
 html[data-pf-theme="light"] .logs-modal-header h3,
@@ -1254,7 +1352,15 @@ body[data-pf-theme="light"] .logs-content .loading,
 html.theme-light .logs-content .loading,
 body.theme-light .logs-content .loading,
 html.pf-v5-theme-light .logs-content .loading,
-body.pf-v5-theme-light .logs-content .loading {
+body.pf-v5-theme-light .logs-content .loading,
+html[data-theme="light"] .healthchecks-content .loading,
+body[data-theme="light"] .healthchecks-content .loading,
+html[data-pf-theme="light"] .healthchecks-content .loading,
+body[data-pf-theme="light"] .healthchecks-content .loading,
+html.theme-light .healthchecks-content .loading,
+body.theme-light .healthchecks-content .loading,
+html.pf-v5-theme-light .healthchecks-content .loading,
+body.pf-v5-theme-light .healthchecks-content .loading {
   background: #f8fafc;
 }
 
@@ -1265,7 +1371,15 @@ body[data-pf-theme="light"] .logs-content .error,
 html.theme-light .logs-content .error,
 body.theme-light .logs-content .error,
 html.pf-v5-theme-light .logs-content .error,
-body.pf-v5-theme-light .logs-content .error {
+body.pf-v5-theme-light .logs-content .error,
+html[data-theme="light"] .healthchecks-content .error,
+body[data-theme="light"] .healthchecks-content .error,
+html[data-pf-theme="light"] .healthchecks-content .error,
+body[data-pf-theme="light"] .healthchecks-content .error,
+html.theme-light .healthchecks-content .error,
+body.theme-light .healthchecks-content .error,
+html.pf-v5-theme-light .healthchecks-content .error,
+body.pf-v5-theme-light .healthchecks-content .error {
   background: #fff1f2;
   border-left-color: #ef4444;
 }
