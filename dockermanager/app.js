@@ -1341,6 +1341,24 @@ function renderDetails(obj){
   const nets   = obj?.NetworkSettings?.Networks || {};
   const ports  = obj?.NetworkSettings?.Ports || {};
   const envArr = Array.isArray(obj?.Config?.Env) ? obj.Config.Env : [];
+  const healthcheck = obj?.Config?.Healthcheck;
+
+  const formatDuration = value => {
+    if (value == null) return '<em>Not set</em>';
+    const nanoseconds = Number(value);
+    if (!Number.isFinite(nanoseconds) || nanoseconds < 0) return s(value);
+    const units = [
+      [60 * 60 * 1000000000, 'h'],
+      [60 * 1000000000, 'm'],
+      [1000000000, 's'],
+      [1000000, 'ms'],
+      [1000, 'us'],
+      [1, 'ns']
+    ];
+    const [unit, suffix] = units.find(([size]) => nanoseconds >= size) || units[units.length - 1];
+    const amount = Math.round((nanoseconds / unit) * 100) / 100;
+    return `${amount}${suffix}`;
+  };
 
   const mountsHtml = mounts.length
     ? mounts.map(m => `<li><code>${s(m.Source)}</code> → <code>${s(m.Destination)}</code> (${s(m.Type)})</li>`).join("")
@@ -1366,6 +1384,21 @@ function renderDetails(obj){
       }).join("")
     : '<li><em>No environment variables</em></li>';
 
+  const healthcheckEnabled = healthcheck && healthcheck?.Test?.[0] !== 'NONE';
+  const healthcheckHtml = healthcheckEnabled
+    ? (() => {
+        const settings = [
+          ['Test', Array.isArray(healthcheck.Test) ? `<code>${s(JSON.stringify(healthcheck.Test))}</code>` : '<em>Not set</em>'],
+          ['Interval', formatDuration(healthcheck.Interval)],
+          ['Timeout', formatDuration(healthcheck.Timeout)],
+          ['Start period', formatDuration(healthcheck.StartPeriod)],
+          ['Retries', healthcheck.Retries == null ? '<em>Not set</em>' : s(healthcheck.Retries)]
+        ];
+        if (healthcheck.StartInterval != null) settings.push(['Start interval', formatDuration(healthcheck.StartInterval)]);
+        return `${settings.map(([label, value]) => `<li><strong>${label}</strong>: ${value}</li>`).join('')}`;
+      })()
+    : '<li><em>No healthcheck configured</em></li>';
+
   return `
     <div class="logs-content" style="background:#111;">
       <div style="font-family:system-ui,sans-serif">
@@ -1374,6 +1407,7 @@ function renderDetails(obj){
         <h4>Volumes / Mounts</h4><ul>${mountsHtml}</ul>
         <h4>Networks</h4><ul>${netsHtml}</ul>
         <h4>Ports</h4><ul>${portsHtml}</ul>
+        <h4>Healthcheck</h4><ul>${healthcheckHtml}</ul>
         <h4>Environment</h4><ul>${envHtml}</ul>
       </div>
     </div>`;
