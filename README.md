@@ -15,6 +15,7 @@
 
 - ✅ List, start, stop, search and restart containers
 - 🔍 View container status, uptime, details and exposed ports
+- ❤️ Monitor container health with color-coded states, healthcheck results, and healthcheck configuration details
 - 💻 In window terminal (now with individual container terminal functionality)
 - 💾 Image management
 
