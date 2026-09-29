@@ -73,6 +73,7 @@
       <div class="tabs">
         <div class="tabs-left">
           <button class="tab-btn active" data-tab="tab-logs">Logs</button>
+          <button class="tab-btn" data-tab="tab-healthchecks">Healthchecks</button>
           <button class="tab-btn" data-tab="tab-terminal">Terminal</button>
           <button class="tab-btn" data-tab="tab-details">Details</button>
         </div>
@@ -91,7 +92,12 @@
           </div>
           <div id="tablogs-content" class="logs-content"><div class="loading">Loading logs…</div></div>
         </section>
-
+        <section id="tab-healthchecks" class="tab-panel">
+          <div class="healthchecks-controls" style="padding:10px 16px;">
+            <button id="tabhealthchecks-follow-btn" class="healthchecks-btn active">⏸️ Stop</button>
+          </div>
+          <div id="tabhealthchecks-content" class="healthchecks-content"><div class="loading">Loading healthchecks...</div></div>
+        </section>
         <section id="tab-terminal" class="tab-panel">
           <div class="terminal-toolbar">
             <label for="shell-select">Shell:</label>
