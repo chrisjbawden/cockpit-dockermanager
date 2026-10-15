@@ -152,6 +152,10 @@ makepkg -si
 
 ### Changelog
 
+#### v1.0.9.1
+- Container health
+- Bugfix - typo
+
 #### v1.0.8.2
 - Network and disk stats added
 - Mobile view styling added
