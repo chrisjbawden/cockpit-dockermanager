@@ -580,7 +580,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function runDockerCommand(container, action){
-    showBanner(`${action.charAt(0).toUpperCase()+action.slice(1)}ing ${container}…`);
+    showBanner(`${action === "stop" ? "Stopping" : action.charAt(0).toUpperCase() + action.slice(1) + "ing"} ${container}…`);
     return spawnDocker(["docker", action, container])
       .then(()=>reloadContainersPromise())
       .catch(()=>showBanner(`❌ Failed to ${action} ${container}`));
